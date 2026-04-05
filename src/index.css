@@ -29,7 +29,7 @@
 
 @layer components {
   .bento-card {
-    @apply bg-[#0e0e0e] border border-white/5 rounded-xl p-8 transition-all duration-500 relative overflow-hidden;
+    @apply bg-[#0e0e0e] border border-white/5 rounded-xl p-6 md:p-8 transition-all duration-500 relative overflow-hidden;
   }
   
   .bento-card:hover {
