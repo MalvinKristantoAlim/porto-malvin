@@ -145,29 +145,31 @@ export default function App() {
   const certUrl = "/sertifraise.pdf";
 
   const containerVariants = {
-    hidden: { opacity: 0, y: 20 },
+    hidden: { opacity: 0, scale: 0.98, y: 10 },
     visible: { 
       opacity: 1, 
+      scale: 1,
       y: 0,
       transition: { 
-        staggerChildren: 0.1,
-        duration: 0.6,
-        ease: [0.16, 1, 0.3, 1]
+        staggerChildren: 0.05,
+        duration: 0.5,
+        ease: [0.22, 1, 0.36, 1]
       }
     },
     exit: { 
       opacity: 0, 
-      y: -20,
-      transition: { duration: 0.4 }
+      scale: 1.02,
+      y: -10,
+      transition: { duration: 0.3, ease: "easeInOut" }
     }
   };
 
   const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
+    hidden: { y: 15, opacity: 0 },
     visible: { 
       y: 0, 
       opacity: 1,
-      transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] }
+      transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] }
     }
   };
 
