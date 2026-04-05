@@ -121,18 +121,20 @@ export default function App() {
               </motion.div>
 
               {/* Profile Card */}
-              <motion.div variants={itemVariants} className="md:col-span-4 bento-card p-0 overflow-hidden group">
-                <img 
-                  src={profileUrl} 
-                  alt="Malvin" 
-                  className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-1000"
-                  referrerPolicy="no-referrer"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src = 'https://picsum.photos/seed/malvin_bento/800/1200';
-                  }}
-                />
-                <div className="absolute bottom-8 left-8">
-                  <div className="text-[10px] font-bold uppercase tracking-widest text-white/50 mb-1">BASED IN</div>
+              <motion.div variants={itemVariants} className="md:col-span-4 bento-card p-0 overflow-hidden group flex flex-col">
+                <div className="flex-1 overflow-hidden">
+                  <img 
+                    src={profileUrl} 
+                    alt="Malvin" 
+                    className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-1000"
+                    referrerPolicy="no-referrer"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = 'https://picsum.photos/seed/malvin_bento/800/1200';
+                    }}
+                  />
+                </div>
+                <div className="p-8 bg-[#0e0e0e]">
+                  <div className="text-[10px] font-bold uppercase tracking-widest text-white/30 mb-1">BASED IN</div>
                   <div className="text-2xl font-display font-bold text-white">INDONESIA</div>
                 </div>
               </motion.div>
@@ -238,30 +240,26 @@ export default function App() {
               variants={containerVariants}
               className="grid grid-cols-1 md:grid-cols-12 gap-6"
             >
-              <motion.div variants={itemVariants} className="md:col-span-12 bento-card p-0 overflow-hidden">
-                <div className="grid grid-cols-1 lg:grid-cols-2">
-                  <div className="aspect-video lg:aspect-auto w-full overflow-hidden relative group">
-                    <img 
-                      src={projectUrl} 
-                      alt="Anomani Project" 
-                      className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-1000"
-                      referrerPolicy="no-referrer"
-                    />
-                  </div>
-                  <div className="p-8 md:p-12 flex flex-col justify-center space-y-8">
-                    <div className="space-y-4">
-                      <div className="px-4 py-1 rounded-full bg-emerald/20 border border-emerald/30 text-[10px] font-bold text-emerald inline-block">PROJECT 2025</div>
-                      <h2 className="text-5xl md:text-8xl font-display font-bold leading-[0.8] tracking-[-0.05em] text-white uppercase">ANOMANI <br /> PROJECT</h2>
-                    </div>
-                    <div className="space-y-6">
-                      <p className="text-lg md:text-xl text-silver-dark font-medium leading-relaxed">
-                        The Anomani Project is a comprehensive study on logistics optimization. By applying <span className="text-emerald">geometric algorithms</span> and <span className="text-emerald">linear programming</span>, we redesigned the packaging for NIKI ECHO to minimize empty space during transit.
-                      </p>
-                      <p className="text-lg md:text-xl text-silver-dark font-medium leading-relaxed">
-                        The system calculates optimal stacking patterns and material distribution, resulting in a significant reduction in carbon footprint and a <span className="text-white">15% improvement</span> in overall shipping efficiency. This project demonstrates the power of mathematical precision in solving real-world industrial challenges.
-                      </p>
-                    </div>
-                  </div>
+              <motion.div variants={itemVariants} className="md:col-span-5 bento-card p-0 overflow-hidden">
+                <img 
+                  src={projectUrl} 
+                  alt="Anomani Project" 
+                  className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-1000"
+                  referrerPolicy="no-referrer"
+                />
+              </motion.div>
+              <motion.div variants={itemVariants} className="md:col-span-7 bento-card flex flex-col justify-center space-y-8">
+                <div className="space-y-4">
+                  <div className="px-4 py-1 rounded-full bg-emerald/20 border border-emerald/30 text-[10px] font-bold text-emerald inline-block">PROJECT 2025</div>
+                  <h2 className="text-5xl md:text-8xl font-display font-bold leading-[0.8] tracking-[-0.05em] text-white uppercase">ANOMANI <br /> PROJECT</h2>
+                </div>
+                <div className="space-y-6">
+                  <p className="text-lg md:text-xl text-silver-dark font-medium leading-relaxed">
+                    The Anomani Project is a comprehensive study on logistics optimization. By applying <span className="text-emerald">geometric algorithms</span> and <span className="text-emerald">linear programming</span>, we redesigned the packaging for NIKI ECHO to minimize empty space during transit.
+                  </p>
+                  <p className="text-lg md:text-xl text-silver-dark font-medium leading-relaxed">
+                    The system calculates optimal stacking patterns and material distribution, resulting in a significant reduction in carbon footprint and a <span className="text-white">15% improvement</span> in overall shipping efficiency.
+                  </p>
                 </div>
               </motion.div>
             </motion.div>
@@ -276,36 +274,31 @@ export default function App() {
               variants={containerVariants}
               className="grid grid-cols-1 md:grid-cols-12 gap-6"
             >
-              <motion.div variants={itemVariants} className="md:col-span-12 bento-card p-0 overflow-hidden">
-                <div className="grid grid-cols-1 lg:grid-cols-2">
-                  <div className="aspect-square lg:aspect-auto w-full overflow-hidden relative group">
-                    <img 
-                      src={raiseUrl} 
-                      alt="RAISE 2025" 
-                      className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-1000"
-                      referrerPolicy="no-referrer"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-r from-obsidian/80 to-transparent lg:hidden" />
-                  </div>
-                  <div className="p-8 md:p-12 flex flex-col justify-center space-y-8">
-                    <div className="inline-flex items-center gap-3 px-5 py-2 rounded-full bg-white/5 border border-white/10 text-[10px] font-bold uppercase tracking-widest text-white/50 w-fit">
-                      <Award size={14} /> National Recognition
-                    </div>
-                    <h2 className="text-5xl md:text-8xl font-display font-bold leading-[0.8] tracking-[-0.05em] text-white uppercase">RAISE 2025 <br /> <span className="text-emerald drop-shadow-[0_0_15px_rgba(16,185,129,0.6)]">FINALIST</span></h2>
-                    <p className="text-lg md:text-xl text-silver-dark font-medium leading-relaxed">
-                      National Accounting Competition Finalist at Ciputra University. Recognized for analytical excellence and strategic problem solving in complex financial simulations, where I applied mathematical models to optimize resource allocation and financial forecasting.
-                    </p>
-                    <div className="flex justify-start pt-4">
-                      <a 
-                        href={certUrl} 
-                        target="_blank"
-                        rel="noreferrer"
-                        className="btn-primary"
-                      >
-                        View Certificate <ExternalLink size={18} />
-                      </a>
-                    </div>
-                  </div>
+              <motion.div variants={itemVariants} className="md:col-span-5 bento-card p-0 overflow-hidden">
+                <img 
+                  src={raiseUrl} 
+                  alt="RAISE 2025" 
+                  className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-1000"
+                  referrerPolicy="no-referrer"
+                />
+              </motion.div>
+              <motion.div variants={itemVariants} className="md:col-span-7 bento-card flex flex-col justify-center space-y-8">
+                <div className="inline-flex items-center gap-3 px-5 py-2 rounded-full bg-white/5 border border-white/10 text-[10px] font-bold uppercase tracking-widest text-white/50 w-fit">
+                  <Award size={14} /> National Recognition
+                </div>
+                <h2 className="text-5xl md:text-8xl font-display font-bold leading-[0.8] tracking-[-0.05em] text-white uppercase">RAISE 2025 <br /> <span className="text-emerald drop-shadow-[0_0_15px_rgba(16,185,129,0.6)]">FINALIST</span></h2>
+                <p className="text-lg md:text-xl text-silver-dark font-medium leading-relaxed">
+                  National Accounting Competition Finalist at Ciputra University. Recognized for analytical excellence and strategic problem solving in complex financial simulations, where I applied mathematical models to optimize resource allocation and financial forecasting.
+                </p>
+                <div className="flex justify-start pt-4">
+                  <a 
+                    href={certUrl} 
+                    target="_blank"
+                    rel="noreferrer"
+                    className="btn-primary"
+                  >
+                    View Certificate <ExternalLink size={18} />
+                  </a>
                 </div>
               </motion.div>
             </motion.div>
