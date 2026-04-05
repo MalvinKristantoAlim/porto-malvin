@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import { GoogleGenAI } from "@google/genai";
 import { 
   Github, 
   Instagram, 
@@ -21,12 +22,128 @@ import {
   Activity,
   Code2,
   Sparkles,
-  Binary
+  Binary,
+  Send,
+  X,
+  Bot
 } from 'lucide-react';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<'home' | 'about' | 'projects' | 'achievements' | 'skills' | 'contact'>('home');
   const [localTime, setLocalTime] = useState(new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  const [isPointer, setIsPointer] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(true);
+  const [selectedProject, setSelectedProject] = useState<string | null>(null);
+  const [typingText, setTypingText] = useState('');
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [chatMessages, setChatMessages] = useState<{ role: 'user' | 'bot', text: string }[]>([
+    { role: 'bot', text: "Hello! I'm Malvin's AI assistant. Ask me anything about his projects, skills, or background." }
+  ]);
+  const [userInput, setUserInput] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
+  const chatEndRef = useRef<HTMLDivElement>(null);
+  
+  const roles = ['System Architect', 'Mathematical Optimizer', 'Problem Solver', 'Algorithm Designer'];
+  const [roleIndex, setRoleIndex] = useState(0);
+  const [charIndex, setCharIndex] = useState(0);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  // Typing Effect Logic
+  useEffect(() => {
+    const currentRole = roles[roleIndex];
+    const typingSpeed = isDeleting ? 50 : 100;
+    
+    const timeout = setTimeout(() => {
+      if (!isDeleting && charIndex < currentRole.length) {
+        setTypingText(prev => prev + currentRole[charIndex]);
+        setCharIndex(prev => prev + 1);
+      } else if (isDeleting && charIndex > 0) {
+        setTypingText(prev => prev.slice(0, -1));
+        setCharIndex(prev => prev - 1);
+      } else if (!isDeleting && charIndex === currentRole.length) {
+        setTimeout(() => setIsDeleting(true), 2000);
+      } else if (isDeleting && charIndex === 0) {
+        setIsDeleting(false);
+        setRoleIndex(prev => (prev + 1) % roles.length);
+      }
+    }, typingSpeed);
+
+    return () => clearTimeout(timeout);
+  }, [charIndex, isDeleting, roleIndex]);
+
+  // Scroll to bottom of chat
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [chatMessages]);
+
+  const handleSendMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!userInput.trim()) return;
+
+    const userMsg = userInput.trim();
+    setChatMessages(prev => [...prev, { role: 'user', text: userMsg }]);
+    setUserInput('');
+    setIsTyping(true);
+
+    try {
+      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+      const response = await ai.models.generateContent({
+        model: "gemini-3-flash-preview",
+        contents: `You are Malvin Kristanto Alim's AI assistant. 
+        Malvin is a student at SMAK Frateran Surabaya, aiming for Universitas Surabaya (UBAYA) for Informatics.
+        He is a "System Architect" and "Mathematical Optimizer".
+        Key project: Anomani Project (logistics optimization using geometric algorithms and linear programming).
+        Achievement: RAISE 2025 National Accounting Competition Finalist at Ciputra University.
+        Skills: React, TypeScript, Tailwind CSS, Framer Motion, Mathematics, Problem Solving, JavaScript, Git.
+        Location: Surabaya, Indonesia.
+        Email: malvinkristantoalim1@gmail.com
+        WhatsApp: +62 882-2666-4102
+        Answer the following question about Malvin in a professional, concise, and helpful tone: ${userMsg}`,
+      });
+
+      setChatMessages(prev => [...prev, { role: 'bot', text: response.text || "I'm sorry, I couldn't process that." }]);
+    } catch (error) {
+      console.error("Chat error:", error);
+      setChatMessages(prev => [...prev, { role: 'bot', text: "System error. Please try again later." }]);
+    } finally {
+      setIsTyping(false);
+    }
+  };
+
+  const handleContactSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    const name = formData.get('name');
+    const email = formData.get('email');
+    const message = formData.get('message');
+    
+    const mailtoLink = `mailto:malvinkristantoalim1@gmail.com?subject=Portfolio Inquiry from ${name}&body=From: ${name} (${email})%0D%0A%0D%0A${message}`;
+    window.location.href = mailtoLink;
+  };
+
+  // Update mouse position and handle spotlight effect
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      setMousePos({ x: e.clientX, y: e.clientY });
+      
+      const target = e.target as HTMLElement;
+      setIsPointer(window.getComputedStyle(target).cursor === 'pointer');
+
+      // Spotlight effect for cards
+      const cards = document.querySelectorAll('.spotlight-card');
+      cards.forEach((card) => {
+        const rect = (card as HTMLElement).getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        (card as HTMLElement).style.setProperty('--mouse-x', `${x}px`);
+        (card as HTMLElement).style.setProperty('--mouse-y', `${y}px`);
+      });
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, []);
 
   // Update local time
   useEffect(() => {
@@ -75,7 +192,43 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-obsidian text-silver-dark font-sans selection:bg-emerald/30 selection:text-white grid-bg">
+    <div className={`min-h-screen ${isDarkMode ? 'bg-obsidian text-silver-dark' : 'light-mode bg-obsidian text-silver-dark'} font-sans selection:bg-emerald/30 selection:text-white grid-bg relative overflow-x-hidden cursor-none transition-colors duration-500`}>
+      
+      {/* Theme Toggle */}
+      <button 
+        onClick={() => setIsDarkMode(!isDarkMode)}
+        className="fixed top-8 right-8 z-[100] w-12 h-12 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-xl flex items-center justify-center text-white/50 hover:text-emerald hover:border-emerald/20 transition-all active:scale-90 spotlight-card"
+      >
+        {isDarkMode ? <Sparkles size={20} /> : <Zap size={20} className="text-emerald" />}
+      </button>
+
+      {/* Custom Cursor */}
+      <motion.div 
+        className="fixed top-0 left-0 w-8 h-8 rounded-full bg-emerald/20 border border-emerald/50 pointer-events-none z-[9999] hidden md:block blur-[2px]"
+        animate={{ 
+          x: mousePos.x - 16, 
+          y: mousePos.y - 16,
+          scale: isPointer ? 1.5 : 1,
+          backgroundColor: isPointer ? 'rgba(16, 185, 129, 0.4)' : 'rgba(16, 185, 129, 0.2)'
+        }}
+        transition={{ type: 'spring', damping: 25, stiffness: 250, mass: 0.5 }}
+      />
+      <motion.div 
+        className="fixed top-0 left-0 w-2 h-2 rounded-full bg-emerald pointer-events-none z-[9999] hidden md:block shadow-[0_0_15px_#10b981]"
+        animate={{ 
+          x: mousePos.x - 4, 
+          y: mousePos.y - 4,
+          scale: isPointer ? 0.5 : 1
+        }}
+        transition={{ type: 'spring', damping: 30, stiffness: 400, mass: 0.2 }}
+      />
+
+      {/* Background Glows */}
+      <div className="fixed inset-0 z-[-1] overflow-hidden pointer-events-none">
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-emerald/10 blur-[120px] rounded-full animate-pulse" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-emerald/10 blur-[120px] rounded-full animate-pulse" style={{ animationDelay: '2s' }} />
+        <div className="absolute top-[40%] left-[60%] w-[30%] h-[30%] bg-emerald/5 blur-[100px] rounded-full animate-pulse" style={{ animationDelay: '4s' }} />
+      </div>
       
       {/* Floating Navigation */}
       <nav className="nav-floating">
@@ -99,92 +252,129 @@ export default function App() {
               className="grid grid-cols-1 md:grid-cols-12 gap-6"
             >
               {/* Main Hero Card */}
-              <motion.div variants={itemVariants} className="md:col-span-8 bento-card flex flex-col justify-between min-h-[350px] md:min-h-[400px] metallic-shine">
-                <div className="space-y-6">
-                  <div className="flex items-center gap-3 text-[10px] font-bold uppercase tracking-widest text-emerald">
-                    <div className="status-dot" /> SYSTEM STATUS: OPTIMIZED
+              <motion.div 
+                variants={itemVariants} 
+                whileInView="visible"
+                viewport={{ once: true, margin: "-100px" }}
+                className="md:col-span-8 bento-card flex flex-col justify-between min-h-[350px] md:min-h-[400px] metallic-shine spotlight-card"
+              >
+                <div className="space-y-8 relative z-10">
+                  <div className="flex items-center gap-3 text-[10px] font-bold uppercase tracking-[0.2em] text-emerald/80">
+                    <div className="status-dot" /> SYSTEM CORE: ACTIVE
                   </div>
-                  <h1 className="text-5xl sm:text-6xl md:text-9xl font-display font-bold leading-[0.8] tracking-[-0.05em] text-white">
-                    MALVIN <br /> KRISTANTO <br /> ALIM
+                  <h1 className="text-5xl sm:text-6xl md:text-9xl font-display font-bold leading-[0.8] tracking-[-0.06em] text-white">
+                    MALVIN <br /> <span className="text-white/90">KRISTANTO</span> <br /> <span className="text-emerald">ALIM</span>
                   </h1>
-                  <p className="text-xl text-silver-dark font-medium max-w-2xl leading-relaxed">
-                    System Architect & <span className="text-emerald">Mathematical Optimizer</span> specializing in <span className="text-white">high-performance digital infrastructures</span> and algorithmic precision.
+                  <div className="h-8 flex items-center">
+                    <p className="text-xl md:text-2xl font-mono text-emerald/80 tracking-tight">
+                      {typingText}<span className="animate-pulse">_</span>
+                    </p>
+                  </div>
+                  <p className="text-lg md:text-xl text-silver-dark font-medium max-w-2xl leading-relaxed opacity-80">
+                    Architecting <span className={isDarkMode ? "text-white" : "text-slate-900"}>high-performance digital systems</span> through mathematical optimization and algorithmic precision.
                   </p>
                 </div>
-                <div className="flex flex-col sm:flex-row items-center gap-4 pt-8">
-                  <button onClick={() => setActiveTab('projects')} className="btn-primary w-full sm:w-auto justify-center">View Projects <ChevronRight size={18} /></button>
-                  <button onClick={() => setActiveTab('contact')} className="btn-secondary w-full sm:w-auto text-center">Contact Me</button>
+                <div className="flex flex-col sm:flex-row items-center gap-4 pt-12 relative z-10">
+                  <button onClick={() => setActiveTab('projects')} className="btn-primary w-full sm:w-auto justify-center group">
+                    Explore Architecture <ChevronRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                  </button>
+                  <button onClick={() => setActiveTab('contact')} className="btn-secondary w-full sm:w-auto text-center">Initiate Contact</button>
+                  <a href="/cv.pdf" download className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/30 hover:text-emerald transition-colors ml-0 sm:ml-4 flex items-center gap-2">
+                    <Award size={14} /> Download CV
+                  </a>
                 </div>
-                <div className="absolute top-8 right-8 text-emerald/10">
-                  <Cpu size={200} strokeWidth={1} />
+                <div className="absolute top-12 right-12 text-emerald/[0.03] pointer-events-none">
+                  <Cpu size={300} strokeWidth={0.5} />
                 </div>
               </motion.div>
 
               {/* Profile Card */}
-              <motion.div variants={itemVariants} className="md:col-span-4 bento-card p-0 overflow-hidden group flex flex-col">
-                <div className="flex-1 overflow-hidden">
+              <motion.div 
+                variants={itemVariants} 
+                whileInView="visible"
+                viewport={{ once: true, margin: "-100px" }}
+                className="md:col-span-4 bento-card p-0 overflow-hidden group flex flex-col spotlight-card"
+              >
+                <div className="flex-1 overflow-hidden relative">
                   <img 
                     src={profileUrl} 
                     alt="Malvin" 
-                    className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-1000"
+                    loading="lazy"
+                    className="w-full h-full object-cover grayscale group-hover:grayscale-0 group-hover:scale-105 transition-all duration-1000"
                     referrerPolicy="no-referrer"
                     onError={(e) => {
                       (e.target as HTMLImageElement).src = 'https://picsum.photos/seed/malvin_bento/800/1200';
                     }}
                   />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                 </div>
-                <div className="p-8 bg-[#0e0e0e]">
-                  <div className="text-[10px] font-bold uppercase tracking-widest text-white/30 mb-1">BASED IN</div>
-                  <div className="text-2xl font-display font-bold text-white">INDONESIA</div>
+                <div className="p-8 bg-[#050505] relative z-10">
+                  <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/30 mb-2">DEPLOYMENT HUB</div>
+                  <div className="text-2xl font-display font-bold text-white tracking-tight">SURABAYA, ID</div>
                 </div>
               </motion.div>
 
               {/* Mathematical Precision Card */}
-              <motion.div variants={itemVariants} className="md:col-span-5 bento-card space-y-6">
-                <div className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center">
-                  <Activity className="text-emerald" size={24} />
+              <motion.div 
+                variants={itemVariants} 
+                whileInView="visible"
+                viewport={{ once: true, margin: "-100px" }}
+                className="md:col-span-5 bento-card space-y-6 spotlight-card"
+              >
+                <div className="w-12 h-12 rounded-2xl bg-emerald/5 border border-emerald/10 flex items-center justify-center">
+                  <Activity className="text-emerald" size={20} />
                 </div>
-                <div className="space-y-2">
-                  <div className="text-[10px] font-bold uppercase tracking-widest text-white/30">OPTIMIZATION ENGINE</div>
-                  <h3 className="text-2xl font-display font-bold text-white uppercase">Mathematical Precision</h3>
-                  <p className="text-sm text-silver-dark leading-relaxed">
-                    Leveraging linear programming and algorithmic strategy to solve complex digital challenges.
+                <div className="space-y-3">
+                  <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald/40">ALGORITHMIC CORE</div>
+                  <h3 className="text-2xl font-display font-bold text-white uppercase tracking-tight">Mathematical Precision</h3>
+                  <p className="text-sm text-silver-dark/80 leading-relaxed">
+                    Leveraging linear programming and algorithmic strategy to solve complex digital challenges with absolute efficiency.
                   </p>
                 </div>
               </motion.div>
 
               {/* Core Stack Card */}
-              <motion.div variants={itemVariants} className="md:col-span-4 bento-card space-y-6">
+              <motion.div 
+                variants={itemVariants} 
+                whileInView="visible"
+                viewport={{ once: true, margin: "-100px" }}
+                className="md:col-span-4 bento-card space-y-6 spotlight-card"
+              >
                 <div className="flex justify-between items-start">
-                  <div className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center">
-                    <Layers className="text-white" size={24} />
+                  <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/5 flex items-center justify-center">
+                    <Layers className="text-white/80" size={20} />
                   </div>
-                  <div className="flex gap-1">
-                    <div className="w-1 h-1 rounded-full bg-white/20" />
-                    <div className="w-1 h-1 rounded-full bg-white/20" />
-                    <div className="w-1 h-1 rounded-full bg-white/20" />
+                  <div className="flex gap-1.5 opacity-30">
+                    <div className="w-1 h-1 rounded-full bg-white" />
+                    <div className="w-1 h-1 rounded-full bg-white" />
+                    <div className="w-1 h-1 rounded-full bg-white" />
                   </div>
                 </div>
                 <div className="space-y-4">
-                  <h3 className="text-2xl font-display font-bold text-white uppercase">Core Stack</h3>
+                  <h3 className="text-2xl font-display font-bold text-white uppercase tracking-tight">Core Stack</h3>
                   <div className="flex flex-wrap gap-2">
                     {['React', 'TypeScript', 'Tailwind', 'Framer'].map(tag => (
-                      <span key={tag} className="px-3 py-1 rounded-lg bg-white/5 border border-white/5 text-[10px] font-bold text-white/50">{tag}</span>
+                      <span key={tag} className="px-3 py-1 rounded-lg bg-white/[0.03] border border-white/[0.05] text-[10px] font-bold text-white/40 uppercase tracking-wider">{tag}</span>
                     ))}
                   </div>
                 </div>
               </motion.div>
 
               {/* Socials & Time Card */}
-              <motion.div variants={itemVariants} className="md:col-span-3 bento-card flex flex-col justify-between">
-                <div className="flex gap-4">
-                  <a href="https://github.com/MalvinKristantoAlim" target="_blank" className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center hover:bg-white/10 transition-colors"><Github size={20} className="text-white" /></a>
-                  <a href="mailto:malvinkristantoalim1@gmail.com" className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center hover:bg-white/10 transition-colors"><Mail size={20} className="text-white" /></a>
-                  <a href="https://wa.me/6288226664102" target="_blank" className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center hover:bg-white/10 transition-colors"><Phone size={20} className="text-white" /></a>
+              <motion.div 
+                variants={itemVariants} 
+                whileInView="visible"
+                viewport={{ once: true, margin: "-100px" }}
+                className="md:col-span-3 bento-card flex flex-col justify-between spotlight-card"
+              >
+                <div className="flex gap-3">
+                  <a href="https://github.com/MalvinKristantoAlim" target="_blank" className="w-11 h-11 rounded-xl bg-white/5 border border-white/5 flex items-center justify-center hover:bg-white/10 transition-all hover:scale-105 active:scale-95"><Github size={18} className="text-white/80" /></a>
+                  <a href="mailto:malvinkristantoalim1@gmail.com" className="w-11 h-11 rounded-xl bg-white/5 border border-white/5 flex items-center justify-center hover:bg-white/10 transition-all hover:scale-105 active:scale-95"><Mail size={18} className="text-white/80" /></a>
+                  <a href="https://wa.me/6288226664102" target="_blank" className="w-11 h-11 rounded-xl bg-white/5 border border-white/5 flex items-center justify-center hover:bg-white/10 transition-all hover:scale-105 active:scale-95"><Phone size={18} className="text-white/80" /></a>
                 </div>
-                <div className="text-right">
-                  <div className="text-[10px] font-bold uppercase tracking-widest text-white/30 mb-1">LOCAL TIME</div>
-                  <div className="text-2xl font-mono font-medium text-white">{localTime} <span className="text-xs text-white/30">GMT+7</span></div>
+                <div className="text-right space-y-1">
+                  <div className="text-[9px] font-bold uppercase tracking-[0.2em] text-white/20">LOCAL TIME</div>
+                  <div className="text-2xl font-mono font-medium text-white tracking-tighter">{localTime} <span className="text-[10px] text-white/20 ml-1">GMT+7</span></div>
                 </div>
               </motion.div>
             </motion.div>
@@ -199,32 +389,36 @@ export default function App() {
               variants={containerVariants}
               className="grid grid-cols-1 md:grid-cols-12 gap-6"
             >
-              <motion.div variants={itemVariants} className="md:col-span-4 bento-card p-0 overflow-hidden">
+              <motion.div variants={itemVariants} className="md:col-span-4 bento-card p-0 overflow-hidden spotlight-card">
                 <img 
                   src={profileUrl} 
                   alt="Malvin Profile" 
-                  className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-700"
+                  loading="lazy"
+                  className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-1000"
                   referrerPolicy="no-referrer"
                 />
               </motion.div>
-              <motion.div variants={itemVariants} className="md:col-span-8 bento-card">
-                <h2 className="text-5xl sm:text-6xl md:text-8xl font-display font-bold leading-[0.8] tracking-[-0.05em] mb-12 uppercase">THE <br /> VISIONARY</h2>
-                <div className="space-y-8 text-xl text-silver-dark font-medium leading-relaxed">
+              <motion.div variants={itemVariants} className="md:col-span-8 bento-card space-y-10 spotlight-card">
+                <div className="space-y-4">
+                  <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald/60">BIOGRAPHY</div>
+                  <h2 className="text-5xl sm:text-6xl md:text-8xl font-display font-bold leading-[0.8] tracking-[-0.06em] mb-4 uppercase">THE <br /> <span className="text-emerald">VISIONARY</span></h2>
+                </div>
+                <div className="space-y-8 text-lg md:text-xl text-silver-dark/80 font-medium leading-relaxed max-w-3xl">
                   <p>
-                    I am <span className="text-white">Malvin Kristanto Alim</span>, a dedicated student at <span className="text-emerald">SMAK Frateran Surabaya</span>. As I approach graduation, my focus is set on <span className="text-emerald">Universitas Surabaya</span>, where I plan to deepen my expertise in informatics and mathematical optimization.
+                    I am <span className="text-white">Malvin Kristanto Alim</span>, a dedicated student at <span className="text-white font-bold">SMAK Frateran Surabaya</span>. As I approach graduation, my focus is set on <span className="text-white font-bold">Universitas Surabaya (UBAYA)</span>, where I plan to deepen my expertise in informatics and mathematical optimization.
                   </p>
                   <p>
                     My academic journey is driven by a passion for solving complex problems through logic. Whether it's competing in national accounting competitions or developing efficiency-focused digital solutions, I strive for excellence in every project I undertake.
                   </p>
                 </div>
-                <div className="grid grid-cols-2 gap-4 mt-12">
-                  <div className="bento-card bg-white/5 border-none p-6">
-                    <div className="text-3xl font-display font-bold text-emerald mb-1">SMAK</div>
-                    <div className="text-[10px] font-bold uppercase tracking-widest text-white/30">Frateran Surabaya</div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-12">
+                  <div className="p-8 rounded-2xl bg-white/[0.02] border border-white/[0.05] space-y-2">
+                    <div className="text-3xl font-display font-bold text-emerald mb-1 tracking-tighter">SMAK</div>
+                    <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/20">Frateran Surabaya</div>
                   </div>
-                  <div className="bento-card bg-white/5 border-none p-6">
-                    <div className="text-3xl font-display font-bold text-white mb-1">UNIV. SURABAYA</div>
-                    <div className="text-[10px] font-bold uppercase tracking-widest text-white/30">Future Destination</div>
+                  <div className="p-8 rounded-2xl bg-white/[0.02] border border-white/[0.05] space-y-2">
+                    <div className="text-3xl font-display font-bold text-white mb-1 tracking-tighter">UBAYA</div>
+                    <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/20">Future Destination</div>
                   </div>
                 </div>
               </motion.div>
@@ -240,26 +434,41 @@ export default function App() {
               variants={containerVariants}
               className="grid grid-cols-1 md:grid-cols-12 gap-6"
             >
-              <motion.div variants={itemVariants} className="md:col-span-5 bento-card p-0 overflow-hidden">
+              <motion.div variants={itemVariants} className="md:col-span-5 bento-card p-0 overflow-hidden spotlight-card group/project relative">
                 <img 
                   src={projectUrl} 
                   alt="Anomani Project" 
-                  className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-1000"
+                  loading="lazy"
+                  className="w-full h-full object-cover grayscale group-hover/project:grayscale-0 group-hover/project:scale-110 transition-all duration-1000"
                   referrerPolicy="no-referrer"
                 />
-              </motion.div>
-              <motion.div variants={itemVariants} className="md:col-span-7 bento-card flex flex-col justify-center space-y-8">
-                <div className="space-y-4">
-                  <div className="px-4 py-1 rounded-full bg-emerald/20 border border-emerald/30 text-[10px] font-bold text-emerald inline-block">PROJECT 2025</div>
-                  <h2 className="text-5xl md:text-8xl font-display font-bold leading-[0.8] tracking-[-0.05em] text-white uppercase">ANOMANI <br /> PROJECT</h2>
+                <div className="absolute inset-0 bg-emerald/20 opacity-0 group-hover/project:opacity-100 transition-opacity duration-500 backdrop-blur-[2px] flex items-center justify-center">
+                  <div className="text-center p-6 transform translate-y-4 group-hover/project:translate-y-0 transition-transform duration-500">
+                    <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-white mb-2">PREVIEW MODE</div>
+                    <div className="text-xl font-display font-bold text-white tracking-tight">LOGISTICS OPTIMIZER</div>
+                  </div>
                 </div>
-                <div className="space-y-6">
-                  <p className="text-lg md:text-xl text-silver-dark font-medium leading-relaxed">
-                    The Anomani Project is a comprehensive study on logistics optimization. By applying <span className="text-emerald">geometric algorithms</span> and <span className="text-emerald">linear programming</span>, we redesigned the packaging for NIKI ECHO to minimize empty space during transit.
+              </motion.div>
+              <motion.div variants={itemVariants} className="md:col-span-7 bento-card flex flex-col justify-center space-y-10 spotlight-card">
+                <div className="space-y-4">
+                  <div className="px-4 py-1.5 rounded-full bg-emerald/10 border border-emerald/20 text-[10px] font-bold text-emerald inline-block uppercase tracking-[0.2em]">PROJECT 2025</div>
+                  <h2 className="text-5xl md:text-8xl font-display font-bold leading-[0.8] tracking-[-0.06em] text-white uppercase">ANOMANI <br /> <span className="text-emerald">PROJECT</span></h2>
+                </div>
+                <div className="space-y-8">
+                  <p className="text-lg md:text-xl text-silver-dark/80 font-medium leading-relaxed max-w-2xl">
+                    The Anomani Project is a comprehensive study on logistics optimization. By applying <span className="text-white">geometric algorithms</span> and <span className="text-white">linear programming</span>, we redesigned the packaging for NIKI ECHO to minimize empty space during transit.
                   </p>
-                  <p className="text-lg md:text-xl text-silver-dark font-medium leading-relaxed">
-                    The system calculates optimal stacking patterns and material distribution, resulting in a significant reduction in carbon footprint and a <span className="text-white">15% improvement</span> in overall shipping efficiency.
+                  <p className="text-lg md:text-xl text-silver-dark/80 font-medium leading-relaxed max-w-2xl">
+                    The system calculates optimal stacking patterns and material distribution, resulting in a significant reduction in carbon footprint and a <span className="text-emerald font-bold">15% improvement</span> in overall shipping efficiency.
                   </p>
+                </div>
+                <div className="pt-4">
+                  <button 
+                    onClick={() => setSelectedProject('anomani')}
+                    className="btn-primary w-full sm:w-auto justify-center group"
+                  >
+                    Technical Analysis <ExternalLink size={18} className="group-hover:translate-x-1 transition-transform" />
+                  </button>
                 </div>
               </motion.div>
             </motion.div>
@@ -274,20 +483,21 @@ export default function App() {
               variants={containerVariants}
               className="grid grid-cols-1 md:grid-cols-12 gap-6"
             >
-              <motion.div variants={itemVariants} className="md:col-span-5 bento-card p-0 overflow-hidden">
+              <motion.div variants={itemVariants} className="md:col-span-5 bento-card p-0 overflow-hidden spotlight-card">
                 <img 
                   src={raiseUrl} 
                   alt="RAISE 2025" 
+                  loading="lazy"
                   className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-1000"
                   referrerPolicy="no-referrer"
                 />
               </motion.div>
-              <motion.div variants={itemVariants} className="md:col-span-7 bento-card flex flex-col justify-center space-y-8">
-                <div className="inline-flex items-center gap-3 px-5 py-2 rounded-full bg-white/5 border border-white/10 text-[10px] font-bold uppercase tracking-widest text-white/50 w-fit">
-                  <Award size={14} /> National Recognition
+              <motion.div variants={itemVariants} className="md:col-span-7 bento-card flex flex-col justify-center space-y-10 spotlight-card">
+                <div className="inline-flex items-center gap-3 px-5 py-2 rounded-full bg-white/[0.03] border border-white/[0.05] text-[10px] font-bold uppercase tracking-[0.2em] text-white/40 w-fit">
+                  <Award size={14} className="text-emerald" /> National Recognition
                 </div>
-                <h2 className="text-5xl md:text-8xl font-display font-bold leading-[0.8] tracking-[-0.05em] text-white uppercase">RAISE 2025 <br /> <span className="text-emerald drop-shadow-[0_0_15px_rgba(16,185,129,0.6)]">FINALIST</span></h2>
-                <p className="text-lg md:text-xl text-silver-dark font-medium leading-relaxed">
+                <h2 className="text-5xl md:text-8xl font-display font-bold leading-[0.8] tracking-[-0.06em] text-white uppercase">RAISE 2025 <br /> <span className="text-emerald drop-shadow-[0_0_20px_rgba(16,185,129,0.4)]">FINALIST</span></h2>
+                <p className="text-lg md:text-xl text-silver-dark/80 font-medium leading-relaxed max-w-2xl">
                   National Accounting Competition Finalist at Ciputra University. Recognized for analytical excellence and strategic problem solving in complex financial simulations, where I applied mathematical models to optimize resource allocation and financial forecasting.
                 </p>
                 <div className="flex justify-start pt-4">
@@ -295,9 +505,9 @@ export default function App() {
                     href={certUrl} 
                     target="_blank"
                     rel="noreferrer"
-                    className="btn-primary"
+                    className="btn-primary group"
                   >
-                    View Certificate <ExternalLink size={18} />
+                    View Certification <ExternalLink size={18} className="group-hover:rotate-12 transition-transform" />
                   </a>
                 </div>
               </motion.div>
@@ -311,34 +521,41 @@ export default function App() {
               animate="visible"
               exit="exit"
               variants={containerVariants}
-              className="grid grid-cols-1 md:grid-cols-12 gap-6"
+              className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6"
             >
               {[
-                { name: "React", percent: 95, icon: <Globe size={20} /> },
-                { name: "TypeScript", percent: 90, icon: <Code2 size={20} /> },
-                { name: "Tailwind CSS", percent: 98, icon: <Layers size={20} /> },
-                { name: "Framer Motion", percent: 88, icon: <Sparkles size={20} /> },
-                { name: "Mathematics", percent: 92, icon: <Calculator size={20} /> },
-                { name: "Problem Solving", percent: 94, icon: <Zap size={20} /> },
-                { name: "JavaScript", percent: 94, icon: <Binary size={20} /> },
-                { name: "Git", percent: 92, icon: <Github size={20} /> }
+                { name: "React", percent: 95, icon: <Globe size={18} /> },
+                { name: "TypeScript", percent: 90, icon: <Code2 size={18} /> },
+                { name: "Tailwind CSS", percent: 98, icon: <Layers size={18} /> },
+                { name: "Framer Motion", percent: 88, icon: <Sparkles size={18} /> },
+                { name: "Mathematics", percent: 92, icon: <Calculator size={18} /> },
+                { name: "Problem Solving", percent: 94, icon: <Zap size={18} /> },
+                { name: "JavaScript", percent: 94, icon: <Binary size={18} /> },
+                { name: "Git", percent: 92, icon: <Github size={18} /> }
               ].map((skill, index) => (
                 <motion.div 
                   key={skill.name}
                   variants={itemVariants}
-                  className="md:col-span-3 bento-card space-y-8 group"
+                  whileInView="visible"
+                  viewport={{ once: true, margin: "-50px" }}
+                  className="bento-card space-y-8 group spotlight-card"
                 >
                   <div className="flex justify-between items-start">
-                    <h3 className="text-xl font-display font-bold text-white uppercase">{skill.name}</h3>
-                    <span className="text-2xl font-display font-bold text-white/10 group-hover:text-emerald transition-colors">{skill.percent}%</span>
+                    <div className="w-10 h-10 rounded-xl bg-white/[0.02] border border-white/[0.05] flex items-center justify-center text-white/20 group-hover:text-emerald group-hover:border-emerald/20 transition-all duration-500">
+                      {skill.icon}
+                    </div>
+                    <span className="text-2xl font-display font-bold text-white/5 group-hover:text-emerald/20 transition-colors tracking-tighter">{skill.percent}%</span>
                   </div>
-                  <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
-                    <motion.div 
-                      initial={{ width: 0 }}
-                      animate={{ width: `${skill.percent}%` }}
-                      transition={{ duration: 1.5, delay: 0.2 }}
-                      className="h-full bg-emerald"
-                    />
+                  <div className="space-y-3">
+                    <h3 className="text-lg font-display font-bold text-white uppercase tracking-tight">{skill.name}</h3>
+                    <div className="w-full h-1 bg-white/[0.02] rounded-full overflow-hidden">
+                      <motion.div 
+                        initial={{ width: 0 }}
+                        animate={{ width: `${skill.percent}%` }}
+                        transition={{ duration: 1.5, delay: 0.2 }}
+                        className="h-full bg-emerald/40"
+                      />
+                    </div>
                   </div>
                 </motion.div>
               ))}
@@ -354,35 +571,72 @@ export default function App() {
               variants={containerVariants}
               className="grid grid-cols-1 md:grid-cols-12 gap-6"
             >
-              <motion.div variants={itemVariants} className="md:col-span-8 bento-card flex flex-col justify-center py-24 space-y-12 metallic-shine">
-                <h2 className="text-5xl sm:text-7xl md:text-9xl font-display font-bold text-white leading-[0.8] tracking-[-0.05em]">
-                  LET'S <br /> <span className="text-emerald drop-shadow-[0_0_20px_rgba(16,185,129,0.7)]">OPTIMIZE</span>
-                </h2>
-                <p className="text-2xl text-silver-dark font-medium max-w-2xl leading-relaxed">
-                  Ready to transform complex challenges into high-performance digital realities. Let's build something exceptional.
-                </p>
-                <div className="flex flex-col sm:flex-row gap-6 pt-4">
-                  <a href="mailto:malvinkristantoalim1@gmail.com" className="btn-primary">Send Email <Mail size={18} /></a>
-                  <a href="https://wa.me/6288226664102" target="_blank" className="btn-secondary">Message WhatsApp</a>
+              <motion.div variants={itemVariants} className="md:col-span-8 bento-card flex flex-col justify-center py-20 md:py-32 space-y-12 metallic-shine spotlight-card">
+                <div className="space-y-6 relative z-10">
+                  <div className="flex items-center gap-3 text-[10px] font-bold uppercase tracking-[0.2em] text-emerald/60">
+                    <div className="status-dot" /> INITIATE PROTOCOL
+                  </div>
+                  <h2 className="text-6xl sm:text-7xl md:text-9xl font-display font-bold text-white leading-[0.8] tracking-[-0.06em] uppercase">
+                    LET'S <br /> <span className="text-emerald drop-shadow-[0_0_30px_rgba(16,185,129,0.4)]">OPTIMIZE</span>
+                  </h2>
+                  <p className="text-xl md:text-2xl text-silver-dark/80 font-medium max-w-2xl leading-relaxed">
+                    Ready to transform complex challenges into high-performance digital realities. Let's build something exceptional.
+                  </p>
+                </div>
+                
+                {/* Modern Contact Form */}
+                <form onSubmit={handleContactSubmit} className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-6 pt-8">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/30 ml-1">IDENTIFIER</label>
+                    <input name="name" type="text" required placeholder="Your Name" className="w-full bg-white/[0.02] border border-white/[0.05] rounded-xl px-5 py-4 text-white placeholder:text-white/10 focus:outline-none focus:border-emerald/30 transition-all" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/30 ml-1">ENDPOINT</label>
+                    <input name="email" type="email" required placeholder="Email Address" className="w-full bg-white/[0.02] border border-white/[0.05] rounded-xl px-5 py-4 text-white placeholder:text-white/10 focus:outline-none focus:border-emerald/30 transition-all" />
+                  </div>
+                  <div className="md:col-span-2 space-y-2">
+                    <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/30 ml-1">TRANSMISSION DATA</label>
+                    <textarea name="message" required rows={4} placeholder="Your Message" className="w-full bg-white/[0.02] border border-white/[0.05] rounded-xl px-5 py-4 text-white placeholder:text-white/10 focus:outline-none focus:border-emerald/30 transition-all resize-none"></textarea>
+                  </div>
+                  <button type="submit" className="btn-primary justify-center md:col-span-2 py-5 text-lg group">
+                    Transmit Message <Zap size={20} className="group-hover:scale-125 transition-transform" />
+                  </button>
+                </form>
+
+                <div className="absolute top-1/2 right-0 -translate-y-1/2 text-emerald/[0.02] pointer-events-none">
+                  <Zap size={400} strokeWidth={0.5} />
                 </div>
               </motion.div>
 
               <motion.div variants={itemVariants} className="md:col-span-4 space-y-6">
-                <div className="bento-card space-y-4 group">
-                  <div className="text-[10px] font-bold uppercase tracking-widest text-white/30">Location</div>
-                  <div className="text-xl font-display font-bold text-white group-hover:text-emerald transition-colors">Surabaya, Indonesia</div>
+                <div className="bento-card space-y-4 group spotlight-card">
+                  <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/20">DEPLOYMENT BASE</div>
+                  <div className="text-xl font-display font-bold text-white group-hover:text-emerald transition-all duration-500 tracking-tight">Surabaya, Indonesia</div>
                 </div>
-                <div className="bento-card space-y-4">
-                  <div className="text-[10px] font-bold uppercase tracking-widest text-white/30">Social Connect</div>
+                <div className="bento-card space-y-6 spotlight-card">
+                  <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/20">SOCIAL NETWORK</div>
                   <div className="flex gap-4">
-                    <a href="https://github.com/MalvinKristantoAlim" target="_blank" className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center hover:bg-emerald/20 hover:text-emerald transition-all border border-transparent hover:border-emerald/30"><Github size={20} /></a>
-                    <a href="#" className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center hover:bg-emerald/20 hover:text-emerald transition-all border border-transparent hover:border-emerald/30"><Instagram size={20} /></a>
-                    <a href="#" className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center hover:bg-emerald/20 hover:text-emerald transition-all border border-transparent hover:border-emerald/30"><Linkedin size={20} /></a>
+                    {[
+                      { icon: <Github size={20} />, href: "https://github.com/MalvinKristantoAlim" },
+                      { icon: <Instagram size={20} />, href: "#" },
+                      { icon: <Linkedin size={20} />, href: "#" }
+                    ].map((social, i) => (
+                      <a 
+                        key={i}
+                        href={social.href} 
+                        target="_blank" 
+                        className="w-12 h-12 rounded-2xl bg-white/[0.02] border border-white/[0.05] flex items-center justify-center hover:bg-emerald/10 hover:text-emerald transition-all duration-500 hover:border-emerald/20 hover:scale-110 active:scale-90"
+                      >
+                        {social.icon}
+                      </a>
+                    ))}
                   </div>
                 </div>
-                <div className="bento-card bg-emerald/5 border-emerald/20">
-                  <div className="text-[10px] font-bold uppercase tracking-widest text-emerald mb-2">Availability</div>
-                  <div className="text-white font-medium">Open for collaborations and innovative projects.</div>
+                <div className="bento-card bg-emerald/[0.02] border-emerald/10 spotlight-card">
+                  <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald/40 mb-3">AVAILABILITY</div>
+                  <div className="text-white/80 font-medium leading-relaxed text-sm">
+                    Open for high-impact collaborations and innovative architectural projects.
+                  </div>
                 </div>
               </motion.div>
             </motion.div>
@@ -395,6 +649,128 @@ export default function App() {
         <div>SYSTEM VERSION: v4.0.26-STABLE</div>
         <div>© 2026 LOGIC ARCHITECT</div>
       </footer>
+
+      {/* ChatBot Toggle */}
+      <button 
+        onClick={() => setIsChatOpen(!isChatOpen)}
+        className="fixed bottom-24 right-8 z-[100] w-14 h-14 rounded-full bg-emerald shadow-[0_0_20px_rgba(16,185,129,0.4)] flex items-center justify-center text-white hover:scale-110 active:scale-90 transition-all spotlight-card"
+      >
+        {isChatOpen ? <X size={24} /> : <Bot size={24} />}
+      </button>
+
+      {/* Chat Window */}
+      <AnimatePresence>
+        {isChatOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: 20, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.9 }}
+            className="fixed bottom-40 right-8 z-[100] w-[350px] max-w-[90vw] h-[500px] bento-card flex flex-col p-0 overflow-hidden shadow-2xl border-emerald/20 spotlight-card"
+          >
+            <div className="p-4 bg-emerald/10 border-b border-emerald/20 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="status-dot" />
+                <span className="text-xs font-bold uppercase tracking-widest text-white">System Assistant</span>
+              </div>
+              <button onClick={() => setIsChatOpen(false)} className="text-white/30 hover:text-white transition-colors">
+                <X size={16} />
+              </button>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
+              {chatMessages.map((msg, i) => (
+                <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                  <div className={`max-w-[80%] p-3 rounded-2xl text-sm ${msg.role === 'user' ? 'bg-emerald text-white' : 'bg-white/5 text-silver-dark'}`}>
+                    {msg.text}
+                  </div>
+                </div>
+              ))}
+              {isTyping && (
+                <div className="flex justify-start">
+                  <div className="bg-white/5 p-3 rounded-2xl flex gap-1">
+                    <div className="w-1.5 h-1.5 rounded-full bg-emerald animate-bounce" />
+                    <div className="w-1.5 h-1.5 rounded-full bg-emerald animate-bounce [animation-delay:0.2s]" />
+                    <div className="w-1.5 h-1.5 rounded-full bg-emerald animate-bounce [animation-delay:0.4s]" />
+                  </div>
+                </div>
+              )}
+              <div ref={chatEndRef} />
+            </div>
+
+            <form onSubmit={handleSendMessage} className="p-4 bg-white/[0.02] border-t border-white/5 flex gap-2">
+              <input 
+                type="text" 
+                value={userInput}
+                onChange={(e) => setUserInput(e.target.value)}
+                placeholder="Ask about Malvin..." 
+                className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-emerald/30 transition-all"
+              />
+              <button type="submit" className="w-10 h-10 rounded-xl bg-emerald flex items-center justify-center text-white hover:bg-emerald/90 transition-all">
+                <Send size={16} />
+              </button>
+            </form>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Case Study Modal */}
+      <AnimatePresence>
+        {selectedProject && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[200] flex items-center justify-center p-4 md:p-8 bg-black/90 backdrop-blur-sm cursor-default"
+            onClick={() => setSelectedProject(null)}
+          >
+            <motion.div 
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              className="w-full max-w-4xl max-h-[90vh] bento-card overflow-y-auto space-y-12 p-8 md:p-12 metallic-shine spotlight-card"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex justify-between items-start">
+                <div className="space-y-4">
+                  <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald/60">CASE STUDY: {selectedProject.toUpperCase()}</div>
+                  <h2 className="text-4xl md:text-6xl font-display font-bold text-white uppercase tracking-tighter">Architecture <br /> <span className="text-emerald">Deep Dive</span></h2>
+                </div>
+                <button 
+                  onClick={() => setSelectedProject(null)}
+                  className="w-12 h-12 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white/50 hover:text-white transition-colors"
+                >
+                  <Zap size={20} />
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+                <div className="space-y-4">
+                  <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/30">01. PROBLEM</div>
+                  <p className="text-silver-dark leading-relaxed">
+                    Logistics systems often suffer from "air shipping" – transporting empty space due to inefficient packaging. This leads to increased costs and carbon emissions.
+                  </p>
+                </div>
+                <div className="space-y-4">
+                  <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/30">02. PROCESS</div>
+                  <p className="text-silver-dark leading-relaxed">
+                    Implemented a Simplex-based optimizer that calculates the 3D bin packing problem in real-time, considering weight distribution and fragile constraints.
+                  </p>
+                </div>
+                <div className="space-y-4">
+                  <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/30">03. RESULT</div>
+                  <p className="text-silver-dark leading-relaxed">
+                    Achieved a 15% reduction in total shipping volume and a 12% decrease in material waste across the entire NIKI ECHO supply chain.
+                  </p>
+                </div>
+              </div>
+
+              <div className="pt-8 border-t border-white/5">
+                <button onClick={() => setSelectedProject(null)} className="btn-primary w-full justify-center">Close Protocol</button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
