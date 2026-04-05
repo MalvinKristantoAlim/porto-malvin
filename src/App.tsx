@@ -99,7 +99,7 @@ export default function App() {
               className="grid grid-cols-1 md:grid-cols-12 gap-6"
             >
               {/* Main Hero Card */}
-              <motion.div variants={itemVariants} className="md:col-span-8 bento-card flex flex-col justify-between min-h-[400px]">
+              <motion.div variants={itemVariants} className="md:col-span-8 bento-card flex flex-col justify-between min-h-[400px] metallic-shine">
                 <div className="space-y-6">
                   <div className="flex items-center gap-3 text-[10px] font-bold uppercase tracking-widest text-emerald">
                     <div className="status-dot" /> SYSTEM STATUS: OPTIMIZED
@@ -197,26 +197,32 @@ export default function App() {
               variants={containerVariants}
               className="grid grid-cols-1 md:grid-cols-12 gap-6"
             >
-              <motion.div variants={itemVariants} className="md:col-span-12 bento-card">
-                <h2 className="text-6xl md:text-9xl font-display font-bold leading-[0.8] tracking-[-0.05em] mb-12">THE <br /> VISIONARY</h2>
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-                  <div className="space-y-8 text-xl text-silver-dark font-medium leading-relaxed">
-                    <p>
-                      I am <span className="text-white">Malvin Kristanto Alim</span>, a 12th-grade visionary navigating the complex intersection of <span className="text-emerald">Mathematics</span> and <span className="text-emerald">Informatics</span>.
-                    </p>
-                    <p>
-                      My approach is defined by mathematical rigor and digital creativity. From optimizing packaging efficiency in the <span className="text-white">Anomani Project</span> to competing as a national finalist in <span className="text-white">RAISE 2025</span>, I transform abstract logic into tangible impact.
-                    </p>
+              <motion.div variants={itemVariants} className="md:col-span-4 bento-card p-0 overflow-hidden">
+                <img 
+                  src={profileUrl} 
+                  alt="Malvin Profile" 
+                  className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-700"
+                  referrerPolicy="no-referrer"
+                />
+              </motion.div>
+              <motion.div variants={itemVariants} className="md:col-span-8 bento-card">
+                <h2 className="text-6xl md:text-8xl font-display font-bold leading-[0.8] tracking-[-0.05em] mb-12 uppercase">THE <br /> VISIONARY</h2>
+                <div className="space-y-8 text-xl text-silver-dark font-medium leading-relaxed">
+                  <p>
+                    I am <span className="text-white">Malvin Kristanto Alim</span>, a dedicated student at <span className="text-emerald">SMAK Frateran Surabaya</span>. As I approach graduation, my focus is set on <span className="text-emerald">Universitas Surabaya</span>, where I plan to deepen my expertise in informatics and mathematical optimization.
+                  </p>
+                  <p>
+                    My academic journey is driven by a passion for solving complex problems through logic. Whether it's competing in national accounting competitions or developing efficiency-focused digital solutions, I strive for excellence in every project I undertake.
+                  </p>
+                </div>
+                <div className="grid grid-cols-2 gap-4 mt-12">
+                  <div className="bento-card bg-white/5 border-none p-6">
+                    <div className="text-3xl font-display font-bold text-emerald mb-1">SMAK</div>
+                    <div className="text-[10px] font-bold uppercase tracking-widest text-white/30">Frateran Surabaya</div>
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="bento-card bg-white/5 border-none">
-                      <div className="text-4xl font-display font-bold text-emerald mb-2 drop-shadow-[0_0_10px_rgba(16,185,129,0.5)]">12</div>
-                      <div className="text-[10px] font-bold uppercase tracking-widest text-white/30">Current Grade</div>
-                    </div>
-                    <div className="bento-card bg-white/5 border-none">
-                      <div className="text-4xl font-display font-bold text-white mb-2">2026</div>
-                      <div className="text-[10px] font-bold uppercase tracking-widest text-white/30">Graduation</div>
-                    </div>
+                  <div className="bento-card bg-white/5 border-none p-6">
+                    <div className="text-3xl font-display font-bold text-white mb-1">UNIV. SURABAYA</div>
+                    <div className="text-[10px] font-bold uppercase tracking-widest text-white/30">Future Destination</div>
                   </div>
                 </div>
               </motion.div>
@@ -248,7 +254,7 @@ export default function App() {
                     </div>
                     <div className="hidden md:block text-right max-w-md">
                       <p className="text-silver-dark font-medium leading-relaxed">
-                        A deep mathematical exploration into packaging efficiency for NIKI ECHO beverages.
+                        The Anomani Project is a comprehensive study on logistics optimization. By applying <span className="text-emerald">geometric algorithms</span> and <span className="text-emerald">linear programming</span>, we redesigned the packaging for NIKI ECHO to minimize empty space during transit. The system calculates optimal stacking patterns and material distribution, resulting in a significant reduction in carbon footprint and a <span className="text-white">15% improvement</span> in overall shipping efficiency.
                       </p>
                     </div>
                   </div>
@@ -266,23 +272,36 @@ export default function App() {
               variants={containerVariants}
               className="grid grid-cols-1 md:grid-cols-12 gap-6"
             >
-              <motion.div variants={itemVariants} className="md:col-span-12 bento-card text-center space-y-12 py-24">
-                <div className="inline-flex items-center gap-3 px-5 py-2 rounded-full bg-white/5 border border-white/10 text-[10px] font-bold uppercase tracking-widest text-white/50">
-                  <Award size={14} /> National Recognition
-                </div>
-                <h2 className="text-6xl md:text-9xl font-display font-bold leading-[0.8] tracking-[-0.05em] text-white uppercase">RAISE 2025 <br /> <span className="text-emerald drop-shadow-[0_0_15px_rgba(16,185,129,0.6)]">FINALIST</span></h2>
-                <p className="text-xl text-silver-dark font-medium max-w-3xl mx-auto leading-relaxed">
-                  National Accounting Competition Finalist at Ciputra University. Recognized for analytical excellence and strategic problem solving.
-                </p>
-                <div className="flex justify-center pt-8">
-                  <a 
-                    href={certUrl} 
-                    target="_blank"
-                    rel="noreferrer"
-                    className="btn-primary"
-                  >
-                    View Certificate <ExternalLink size={18} />
-                  </a>
+              <motion.div variants={itemVariants} className="md:col-span-12 bento-card p-0 overflow-hidden">
+                <div className="grid grid-cols-1 lg:grid-cols-2">
+                  <div className="aspect-square lg:aspect-auto w-full overflow-hidden relative group">
+                    <img 
+                      src={raiseUrl} 
+                      alt="RAISE 2025" 
+                      className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-1000"
+                      referrerPolicy="no-referrer"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-r from-obsidian/80 to-transparent lg:hidden" />
+                  </div>
+                  <div className="p-12 flex flex-col justify-center space-y-8">
+                    <div className="inline-flex items-center gap-3 px-5 py-2 rounded-full bg-white/5 border border-white/10 text-[10px] font-bold uppercase tracking-widest text-white/50 w-fit">
+                      <Award size={14} /> National Recognition
+                    </div>
+                    <h2 className="text-6xl md:text-8xl font-display font-bold leading-[0.8] tracking-[-0.05em] text-white uppercase">RAISE 2025 <br /> <span className="text-emerald drop-shadow-[0_0_15px_rgba(16,185,129,0.6)]">FINALIST</span></h2>
+                    <p className="text-xl text-silver-dark font-medium leading-relaxed">
+                      National Accounting Competition Finalist at Ciputra University. Recognized for analytical excellence and strategic problem solving in complex financial simulations.
+                    </p>
+                    <div className="flex justify-start pt-4">
+                      <a 
+                        href={certUrl} 
+                        target="_blank"
+                        rel="noreferrer"
+                        className="btn-primary"
+                      >
+                        View Certificate <ExternalLink size={18} />
+                      </a>
+                    </div>
+                  </div>
                 </div>
               </motion.div>
             </motion.div>
@@ -338,16 +357,35 @@ export default function App() {
               variants={containerVariants}
               className="grid grid-cols-1 md:grid-cols-12 gap-6"
             >
-              <motion.div variants={itemVariants} className="md:col-span-12 bento-card text-center py-32 space-y-12">
+              <motion.div variants={itemVariants} className="md:col-span-8 bento-card flex flex-col justify-center py-24 space-y-12 metallic-shine">
                 <h2 className="text-7xl md:text-9xl font-display font-bold text-white leading-[0.8] tracking-[-0.05em]">
                   LET'S <br /> <span className="text-emerald drop-shadow-[0_0_20px_rgba(16,185,129,0.7)]">OPTIMIZE</span>
                 </h2>
-                <p className="text-2xl text-silver-dark font-medium max-w-2xl mx-auto leading-relaxed">
-                  Ready to transform complex challenges into high-performance digital realities.
+                <p className="text-2xl text-silver-dark font-medium max-w-2xl leading-relaxed">
+                  Ready to transform complex challenges into high-performance digital realities. Let's build something exceptional.
                 </p>
-                <div className="flex flex-col sm:flex-row justify-center gap-6 pt-12">
+                <div className="flex flex-col sm:flex-row gap-6 pt-4">
                   <a href="mailto:malvinkristantoalim1@gmail.com" className="btn-primary">Send Email <Mail size={18} /></a>
                   <a href="https://wa.me/6288226664102" target="_blank" className="btn-secondary">Message WhatsApp</a>
+                </div>
+              </motion.div>
+
+              <motion.div variants={itemVariants} className="md:col-span-4 space-y-6">
+                <div className="bento-card space-y-4 group">
+                  <div className="text-[10px] font-bold uppercase tracking-widest text-white/30">Location</div>
+                  <div className="text-xl font-display font-bold text-white group-hover:text-emerald transition-colors">Surabaya, Indonesia</div>
+                </div>
+                <div className="bento-card space-y-4">
+                  <div className="text-[10px] font-bold uppercase tracking-widest text-white/30">Social Connect</div>
+                  <div className="flex gap-4">
+                    <a href="https://github.com/MalvinKristantoAlim" target="_blank" className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center hover:bg-emerald/20 hover:text-emerald transition-all border border-transparent hover:border-emerald/30"><Github size={20} /></a>
+                    <a href="#" className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center hover:bg-emerald/20 hover:text-emerald transition-all border border-transparent hover:border-emerald/30"><Instagram size={20} /></a>
+                    <a href="#" className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center hover:bg-emerald/20 hover:text-emerald transition-all border border-transparent hover:border-emerald/30"><Linkedin size={20} /></a>
+                  </div>
+                </div>
+                <div className="bento-card bg-emerald/5 border-emerald/20">
+                  <div className="text-[10px] font-bold uppercase tracking-widest text-emerald mb-2">Availability</div>
+                  <div className="text-white font-medium">Open for collaborations and innovative projects.</div>
                 </div>
               </motion.div>
             </motion.div>
