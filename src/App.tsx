@@ -239,22 +239,26 @@ export default function App() {
               className="grid grid-cols-1 md:grid-cols-12 gap-6"
             >
               <motion.div variants={itemVariants} className="md:col-span-12 bento-card p-0 overflow-hidden">
-                <div className="aspect-video w-full overflow-hidden relative group">
-                  <img 
-                    src={projectUrl} 
-                    alt="Anomani Project" 
-                    className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-1000"
-                    referrerPolicy="no-referrer"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-obsidian via-transparent to-transparent" />
-                  <div className="absolute bottom-6 left-6 right-6 md:bottom-12 md:left-12 md:right-12 flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2">
+                  <div className="aspect-video lg:aspect-auto w-full overflow-hidden relative group">
+                    <img 
+                      src={projectUrl} 
+                      alt="Anomani Project" 
+                      className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-1000"
+                      referrerPolicy="no-referrer"
+                    />
+                  </div>
+                  <div className="p-8 md:p-12 flex flex-col justify-center space-y-8">
                     <div className="space-y-4">
                       <div className="px-4 py-1 rounded-full bg-emerald/20 border border-emerald/30 text-[10px] font-bold text-emerald inline-block">PROJECT 2025</div>
-                      <h2 className="text-5xl md:text-9xl font-display font-bold leading-[0.8] tracking-[-0.05em] text-white uppercase">ANOMANI <br /> PROJECT</h2>
+                      <h2 className="text-5xl md:text-8xl font-display font-bold leading-[0.8] tracking-[-0.05em] text-white uppercase">ANOMANI <br /> PROJECT</h2>
                     </div>
-                    <div className="text-left md:text-right max-w-md">
-                      <p className="text-sm md:text-silver-dark font-medium leading-relaxed">
-                        The Anomani Project is a comprehensive study on logistics optimization. By applying <span className="text-emerald">geometric algorithms</span> and <span className="text-emerald">linear programming</span>, we redesigned the packaging for NIKI ECHO to minimize empty space during transit. The system calculates optimal stacking patterns and material distribution, resulting in a significant reduction in carbon footprint and a <span className="text-white">15% improvement</span> in overall shipping efficiency.
+                    <div className="space-y-6">
+                      <p className="text-lg md:text-xl text-silver-dark font-medium leading-relaxed">
+                        The Anomani Project is a comprehensive study on logistics optimization. By applying <span className="text-emerald">geometric algorithms</span> and <span className="text-emerald">linear programming</span>, we redesigned the packaging for NIKI ECHO to minimize empty space during transit.
+                      </p>
+                      <p className="text-lg md:text-xl text-silver-dark font-medium leading-relaxed">
+                        The system calculates optimal stacking patterns and material distribution, resulting in a significant reduction in carbon footprint and a <span className="text-white">15% improvement</span> in overall shipping efficiency. This project demonstrates the power of mathematical precision in solving real-world industrial challenges.
                       </p>
                     </div>
                   </div>
