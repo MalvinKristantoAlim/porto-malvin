@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence, useMotionValue, useSpring } from 'motion/react';
+import Lenis from 'lenis';
 import { GoogleGenAI } from "@google/genai";
 import { 
   Github, 
@@ -32,6 +33,19 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<'home' | 'about' | 'projects' | 'achievements' | 'skills' | 'contact'>('home');
   const [localTime, setLocalTime] = useState(new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
   const [selectedProject, setSelectedProject] = useState<string | null>(null);
+  
+  // Zero-rerender cursor values
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+  
+  const springConfig = { damping: 25, stiffness: 250, mass: 0.5 };
+  const cursorX = useSpring(mouseX, springConfig);
+  const cursorY = useSpring(mouseY, springConfig);
+  
+  const dotX = useSpring(mouseX, { damping: 30, stiffness: 400, mass: 0.2 });
+  const dotY = useSpring(mouseY, { damping: 30, stiffness: 400, mass: 0.2 });
+
+  const [isPointer, setIsPointer] = useState(false);
   const [typingText, setTypingText] = useState('');
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [chatMessages, setChatMessages] = useState<{ role: 'user' | 'bot', text: string }[]>([
@@ -135,8 +149,39 @@ export default function App() {
 
   // Scroll to top on tab change
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: 'instant' });
   }, [activeTab]);
+
+  // Initialize Lenis
+  useEffect(() => {
+    const lenis = new Lenis({
+      duration: 1.2,
+      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      smoothWheel: true,
+    });
+
+    function raf(time: number) {
+      lenis.raf(time);
+      requestAnimationFrame(raf);
+    }
+
+    requestAnimationFrame(raf);
+
+    const handleMouseMove = (e: MouseEvent) => {
+      mouseX.set(e.clientX);
+      mouseY.set(e.clientY);
+      
+      const target = e.target as HTMLElement;
+      setIsPointer(window.getComputedStyle(target).cursor === 'pointer');
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+
+    return () => {
+      lenis.destroy();
+      window.removeEventListener('mousemove', handleMouseMove);
+    };
+  }, []);
 
   // Local Sourced Images
   const profileUrl = "/profile.jpeg";
@@ -145,37 +190,58 @@ export default function App() {
   const certUrl = "/sertifraise.pdf";
 
   const containerVariants = {
-    hidden: { opacity: 0, scale: 0.98, y: 10 },
+    hidden: { opacity: 0 },
     visible: { 
       opacity: 1, 
-      scale: 1,
-      y: 0,
       transition: { 
-        staggerChildren: 0.05,
-        duration: 0.5,
-        ease: [0.22, 1, 0.36, 1]
+        staggerChildren: 0.08,
+        delayChildren: 0.1
       }
     },
     exit: { 
-      opacity: 0, 
-      scale: 1.02,
-      y: -10,
-      transition: { duration: 0.3, ease: "easeInOut" }
+      opacity: 0,
+      transition: { duration: 0.2 }
     }
   };
 
   const itemVariants = {
-    hidden: { y: 15, opacity: 0 },
+    hidden: { y: 20, opacity: 0 },
     visible: { 
       y: 0, 
       opacity: 1,
-      transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] }
+      transition: { 
+        type: "spring",
+        damping: 25,
+        stiffness: 120,
+        mass: 1
+      }
     }
   };
 
   return (
     <div className="min-h-screen bg-obsidian text-silver-dark font-sans selection:bg-emerald/30 selection:text-white grid-bg relative overflow-x-hidden transition-colors duration-500">
       
+      {/* Custom Cursor */}
+      <motion.div 
+        className="fixed top-0 left-0 w-8 h-8 rounded-full bg-emerald/10 border border-emerald/30 pointer-events-none z-[9999] hidden md:block blur-[1px]"
+        style={{ 
+          x: cursorX, 
+          y: cursorY,
+          translateX: '-50%',
+          translateY: '-50%',
+          scale: isPointer ? 1.5 : 1,
+        }}
+      />
+      <motion.div 
+        className="fixed top-0 left-0 w-1.5 h-1.5 rounded-full bg-emerald pointer-events-none z-[9999] hidden md:block shadow-[0_0_10px_#10b981]"
+        style={{ 
+          x: dotX, 
+          y: dotY,
+          translateX: '-50%',
+          translateY: '-50%',
+        }}
+      />
+
       {/* Background Glows */}
       <div className="fixed inset-0 z-[-1] overflow-hidden pointer-events-none">
         <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-emerald/10 blur-[120px] rounded-full" />
@@ -185,12 +251,25 @@ export default function App() {
       
       {/* Floating Navigation */}
       <nav className="nav-floating">
-        <button onClick={() => setActiveTab('home')} className={`nav-item ${activeTab === 'home' ? 'nav-item-active' : ''}`}><Home size={20} /></button>
-        <button onClick={() => setActiveTab('about')} className={`nav-item ${activeTab === 'about' ? 'nav-item-active' : ''}`}><User size={20} /></button>
-        <button onClick={() => setActiveTab('projects')} className={`nav-item ${activeTab === 'projects' ? 'nav-item-active' : ''}`}><Briefcase size={20} /></button>
-        <button onClick={() => setActiveTab('achievements')} className={`nav-item ${activeTab === 'achievements' ? 'nav-item-active' : ''}`}><Award size={20} /></button>
-        <button onClick={() => setActiveTab('skills')} className={`nav-item ${activeTab === 'skills' ? 'nav-item-active' : ''}`}><Cpu size={20} /></button>
-        <button onClick={() => setActiveTab('contact')} className={`nav-item ${activeTab === 'contact' ? 'nav-item-active' : ''}`}><Mail size={20} /></button>
+        {[
+          { id: 'home', icon: <Home size={20} /> },
+          { id: 'about', icon: <User size={20} /> },
+          { id: 'projects', icon: <Briefcase size={20} /> },
+          { id: 'achievements', icon: <Award size={20} /> },
+          { id: 'skills', icon: <Cpu size={20} /> },
+          { id: 'contact', icon: <Mail size={20} /> }
+        ].map((item) => (
+          <motion.button 
+            key={item.id}
+            onClick={() => setActiveTab(item.id as any)} 
+            whileHover={{ scale: 1.1, y: -2 }}
+            whileTap={{ scale: 0.9 }}
+            transition={{ type: "spring", stiffness: 400, damping: 17 }}
+            className={`nav-item ${activeTab === item.id ? 'nav-item-active' : ''}`}
+          >
+            {item.icon}
+          </motion.button>
+        ))}
       </nav>
 
       <main className="max-w-7xl mx-auto px-4 md:px-6 pt-8 md:pt-12 pb-40">
@@ -208,6 +287,7 @@ export default function App() {
               <motion.div 
                 variants={itemVariants} 
                 whileInView="visible"
+                whileHover={{ y: -5, transition: { type: "spring", stiffness: 400, damping: 25 } }}
                 viewport={{ once: true, margin: "-100px" }}
                 className="md:col-span-8 bento-card flex flex-col justify-between min-h-[350px] md:min-h-[400px] metallic-shine"
               >
@@ -228,13 +308,34 @@ export default function App() {
                   </p>
                 </div>
                 <div className="flex flex-col sm:flex-row items-center gap-4 pt-12 relative z-10">
-                  <button onClick={() => setActiveTab('projects')} className="btn-primary w-full sm:w-auto justify-center group">
+                  <motion.button 
+                    onClick={() => setActiveTab('projects')} 
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                    className="btn-primary w-full sm:w-auto justify-center group"
+                  >
                     Explore Architecture <ChevronRight size={18} className="group-hover:translate-x-1 transition-transform" />
-                  </button>
-                  <button onClick={() => setActiveTab('contact')} className="btn-secondary w-full sm:w-auto text-center">Initiate Contact</button>
-                  <a href="/cv.pdf" download className="text-[10px] font-bold uppercase tracking-[0.2em] text-silver-dark hover:text-emerald transition-colors ml-0 sm:ml-4 flex items-center gap-2">
+                  </motion.button>
+                  <motion.button 
+                    onClick={() => setActiveTab('contact')} 
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                    className="btn-secondary w-full sm:w-auto text-center"
+                  >
+                    Initiate Contact
+                  </motion.button>
+                  <motion.a 
+                    href="/cv.pdf" 
+                    download 
+                    whileHover={{ scale: 1.05, x: 5 }}
+                    whileTap={{ scale: 0.95 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                    className="text-[10px] font-bold uppercase tracking-[0.2em] text-silver-dark hover:text-emerald transition-colors ml-0 sm:ml-4 flex items-center gap-2"
+                  >
                     <Award size={14} /> Download CV
-                  </a>
+                  </motion.a>
                 </div>
                 <div className="absolute top-12 right-12 text-emerald/[0.03] pointer-events-none">
                   <Cpu size={300} strokeWidth={0.5} />
@@ -245,6 +346,7 @@ export default function App() {
               <motion.div 
                 variants={itemVariants} 
                 whileInView="visible"
+                whileHover={{ y: -5, transition: { type: "spring", stiffness: 400, damping: 25 } }}
                 viewport={{ once: true, margin: "-100px" }}
                 className="md:col-span-4 bento-card p-0 overflow-hidden group flex flex-col"
               >
@@ -253,6 +355,7 @@ export default function App() {
                     src={profileUrl} 
                     alt="Malvin" 
                     loading="lazy"
+                    onLoad={(e) => (e.target as HTMLImageElement).classList.add('loaded')}
                     className="w-full h-full object-cover grayscale group-hover:grayscale-0 group-hover:scale-105 transition-all duration-1000"
                     referrerPolicy="no-referrer"
                     onError={(e) => {
@@ -271,6 +374,7 @@ export default function App() {
               <motion.div 
                 variants={itemVariants} 
                 whileInView="visible"
+                whileHover={{ y: -5, transition: { type: "spring", stiffness: 400, damping: 25 } }}
                 viewport={{ once: true, margin: "-100px" }}
                 className="md:col-span-5 bento-card space-y-6"
               >
@@ -290,6 +394,7 @@ export default function App() {
               <motion.div 
                 variants={itemVariants} 
                 whileInView="visible"
+                whileHover={{ y: -5, transition: { type: "spring", stiffness: 400, damping: 25 } }}
                 viewport={{ once: true, margin: "-100px" }}
                 className="md:col-span-4 bento-card space-y-6"
               >
@@ -317,6 +422,7 @@ export default function App() {
               <motion.div 
                 variants={itemVariants} 
                 whileInView="visible"
+                whileHover={{ y: -5, transition: { type: "spring", stiffness: 400, damping: 25 } }}
                 viewport={{ once: true, margin: "-100px" }}
                 className="md:col-span-3 bento-card flex flex-col justify-between"
               >
@@ -342,16 +448,25 @@ export default function App() {
               variants={containerVariants}
               className="grid grid-cols-1 md:grid-cols-12 gap-6"
             >
-              <motion.div variants={itemVariants} className="md:col-span-4 bento-card p-0 overflow-hidden">
+              <motion.div 
+                variants={itemVariants} 
+                whileHover={{ y: -5, transition: { type: "spring", stiffness: 400, damping: 25 } }}
+                className="md:col-span-4 bento-card p-0 overflow-hidden"
+              >
                 <img 
                   src={profileUrl} 
                   alt="Malvin Profile" 
                   loading="lazy"
+                  onLoad={(e) => (e.target as HTMLImageElement).classList.add('loaded')}
                   className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-1000"
                   referrerPolicy="no-referrer"
                 />
               </motion.div>
-              <motion.div variants={itemVariants} className="md:col-span-8 bento-card space-y-10">
+              <motion.div 
+                variants={itemVariants} 
+                whileHover={{ y: -5, transition: { type: "spring", stiffness: 400, damping: 25 } }}
+                className="md:col-span-8 bento-card space-y-10"
+              >
                 <div className="space-y-4">
                   <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald/60">BIOGRAPHY</div>
                   <h2 className="text-5xl sm:text-6xl md:text-8xl font-display font-bold leading-[0.8] tracking-[-0.06em] mb-4 uppercase text-silver">THE <br /> <span className="text-emerald">VISIONARY</span></h2>
@@ -387,11 +502,16 @@ export default function App() {
               variants={containerVariants}
               className="grid grid-cols-1 md:grid-cols-12 gap-6"
             >
-              <motion.div variants={itemVariants} className="md:col-span-5 bento-card p-0 overflow-hidden group/project relative">
+              <motion.div 
+                variants={itemVariants} 
+                whileHover={{ y: -5, transition: { type: "spring", stiffness: 400, damping: 25 } }}
+                className="md:col-span-5 bento-card p-0 overflow-hidden group/project relative"
+              >
                 <img 
                   src={projectUrl} 
                   alt="Anomani Project" 
                   loading="lazy"
+                  onLoad={(e) => (e.target as HTMLImageElement).classList.add('loaded')}
                   className="w-full h-full object-cover grayscale group-hover/project:grayscale-0 group-hover/project:scale-110 transition-all duration-1000"
                   referrerPolicy="no-referrer"
                 />
@@ -402,7 +522,11 @@ export default function App() {
                   </div>
                 </div>
               </motion.div>
-              <motion.div variants={itemVariants} className="md:col-span-7 bento-card flex flex-col justify-center space-y-10 spotlight-card">
+              <motion.div 
+                variants={itemVariants} 
+                whileHover={{ y: -5, transition: { type: "spring", stiffness: 400, damping: 25 } }}
+                className="md:col-span-7 bento-card flex flex-col justify-center space-y-10"
+              >
                 <div className="space-y-4">
                   <div className="px-4 py-1.5 rounded-full bg-emerald/10 border border-emerald/20 text-[10px] font-bold text-emerald inline-block uppercase tracking-[0.2em]">PROJECT 2025</div>
                   <h2 className="text-5xl md:text-8xl font-display font-bold leading-[0.8] tracking-[-0.06em] text-silver uppercase">ANOMANI <br /> <span className="text-emerald">PROJECT</span></h2>
@@ -416,12 +540,15 @@ export default function App() {
                   </p>
                 </div>
                 <div className="pt-4">
-                  <button 
+                  <motion.button 
                     onClick={() => setSelectedProject('anomani')}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 17 }}
                     className="btn-primary w-full sm:w-auto justify-center group"
                   >
                     Technical Analysis <ExternalLink size={18} className="group-hover:translate-x-1 transition-transform" />
-                  </button>
+                  </motion.button>
                 </div>
               </motion.div>
             </motion.div>
@@ -436,16 +563,25 @@ export default function App() {
               variants={containerVariants}
               className="grid grid-cols-1 md:grid-cols-12 gap-6"
             >
-              <motion.div variants={itemVariants} className="md:col-span-5 bento-card p-0 overflow-hidden">
+              <motion.div 
+                variants={itemVariants} 
+                whileHover={{ y: -5, transition: { type: "spring", stiffness: 400, damping: 25 } }}
+                className="md:col-span-5 bento-card p-0 overflow-hidden"
+              >
                 <img 
                   src={raiseUrl} 
                   alt="RAISE 2025" 
                   loading="lazy"
+                  onLoad={(e) => (e.target as HTMLImageElement).classList.add('loaded')}
                   className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-1000"
                   referrerPolicy="no-referrer"
                 />
               </motion.div>
-              <motion.div variants={itemVariants} className="md:col-span-7 bento-card flex flex-col justify-center space-y-10 spotlight-card">
+              <motion.div 
+                variants={itemVariants} 
+                whileHover={{ y: -5, transition: { type: "spring", stiffness: 400, damping: 25 } }}
+                className="md:col-span-7 bento-card flex flex-col justify-center space-y-10"
+              >
                 <div className="inline-flex items-center gap-3 px-5 py-2 rounded-full bg-emerald/5 border border-emerald/10 text-[10px] font-bold uppercase tracking-[0.2em] text-emerald/60 w-fit">
                   <Award size={14} className="text-emerald" /> National Recognition
                 </div>
@@ -490,6 +626,7 @@ export default function App() {
                   key={skill.name}
                   variants={itemVariants}
                   whileInView="visible"
+                  whileHover={{ y: -5, transition: { type: "spring", stiffness: 400, damping: 25 } }}
                   viewport={{ once: true, margin: "-50px" }}
                   className="bento-card space-y-8 group"
                 >
@@ -524,7 +661,11 @@ export default function App() {
               variants={containerVariants}
               className="grid grid-cols-1 md:grid-cols-12 gap-6"
             >
-              <motion.div variants={itemVariants} className="md:col-span-8 bento-card flex flex-col justify-center py-20 md:py-32 space-y-12 metallic-shine">
+              <motion.div 
+                variants={itemVariants} 
+                whileHover={{ y: -5, transition: { type: "spring", stiffness: 400, damping: 25 } }}
+                className="md:col-span-8 bento-card flex flex-col justify-center py-20 md:py-32 space-y-12 metallic-shine"
+              >
                 <div className="space-y-6 relative z-10">
                   <div className="flex items-center gap-3 text-[10px] font-bold uppercase tracking-[0.2em] text-emerald/60">
                     <div className="status-dot" /> INITIATE PROTOCOL
@@ -551,9 +692,15 @@ export default function App() {
                     <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-silver-dark/40 ml-1">TRANSMISSION DATA</label>
                     <textarea name="message" required rows={4} placeholder="Your Message" className="w-full bg-emerald/5 border border-emerald/10 rounded-xl px-5 py-4 text-silver placeholder:text-silver-dark/30 focus:outline-none focus:border-emerald/30 transition-all resize-none"></textarea>
                   </div>
-                  <button type="submit" className="btn-primary justify-center md:col-span-2 py-5 text-lg group">
+                  <motion.button 
+                    type="submit" 
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                    className="btn-primary justify-center md:col-span-2 py-5 text-lg group"
+                  >
                     Transmit Message <Zap size={20} className="group-hover:scale-125 transition-transform" />
-                  </button>
+                  </motion.button>
                 </form>
 
                 <div className="absolute top-1/2 right-0 -translate-y-1/2 text-emerald/[0.02] pointer-events-none">
@@ -574,18 +721,21 @@ export default function App() {
                       { icon: <Instagram size={20} />, href: "#" },
                       { icon: <Linkedin size={20} />, href: "#" }
                     ].map((social, i) => (
-                      <a 
+                      <motion.a 
                         key={i}
                         href={social.href} 
                         target="_blank" 
-                        className="w-12 h-12 rounded-2xl bg-emerald/5 border border-emerald/10 flex items-center justify-center hover:bg-emerald/10 hover:text-emerald transition-all duration-500 hover:border-emerald/20 hover:scale-110 active:scale-90"
+                        whileHover={{ scale: 1.1, y: -5 }}
+                        whileTap={{ scale: 0.9 }}
+                        transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                        className="w-12 h-12 rounded-2xl bg-emerald/5 border border-emerald/10 flex items-center justify-center hover:bg-emerald/10 hover:text-emerald transition-all duration-500 hover:border-emerald/20"
                       >
                         {social.icon}
-                      </a>
+                      </motion.a>
                     ))}
                   </div>
                 </div>
-                <div className="bento-card bg-emerald/[0.02] border-emerald/10 spotlight-card">
+                <div className="bento-card bg-emerald/[0.02] border-emerald/10">
                   <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald/40 mb-3">AVAILABILITY</div>
                   <div className="text-silver/80 font-medium leading-relaxed text-sm">
                     Open for high-impact collaborations and innovative architectural projects.
@@ -604,12 +754,15 @@ export default function App() {
       </footer>
 
       {/* ChatBot Toggle */}
-      <button 
+      <motion.button 
         onClick={() => setIsChatOpen(!isChatOpen)}
-        className="fixed bottom-24 right-8 z-[100] w-14 h-14 rounded-full bg-emerald shadow-[0_0_20px_rgba(16,185,129,0.4)] flex items-center justify-center text-white hover:scale-110 active:scale-90 transition-all"
+        whileHover={{ scale: 1.1, rotate: 5 }}
+        whileTap={{ scale: 0.9 }}
+        transition={{ type: "spring", stiffness: 400, damping: 17 }}
+        className="fixed bottom-24 right-8 z-[100] w-14 h-14 rounded-full bg-emerald shadow-[0_0_20px_rgba(16,185,129,0.4)] flex items-center justify-center text-white transition-all"
       >
         {isChatOpen ? <X size={24} /> : <Bot size={24} />}
-      </button>
+      </motion.button>
 
       {/* Chat Window */}
       {isChatOpen && (
@@ -621,9 +774,14 @@ export default function App() {
               <div className="status-dot" />
               <span className="text-xs font-bold uppercase tracking-widest text-silver">System Assistant</span>
             </div>
-            <button onClick={() => setIsChatOpen(false)} className="text-silver/30 hover:text-silver transition-colors">
+            <motion.button 
+              onClick={() => setIsChatOpen(false)} 
+              whileHover={{ scale: 1.1, rotate: 90 }}
+              whileTap={{ scale: 0.9 }}
+              className="text-silver/30 hover:text-silver transition-colors"
+            >
               <X size={16} />
-            </button>
+            </motion.button>
           </div>
           
           <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
@@ -654,9 +812,14 @@ export default function App() {
               placeholder="Ask about Malvin..." 
               className="flex-1 bg-emerald/5 border border-emerald/10 rounded-xl px-4 py-2 text-sm text-silver focus:outline-none focus:border-emerald/30 transition-all"
             />
-            <button type="submit" className="w-10 h-10 rounded-xl bg-emerald flex items-center justify-center text-white hover:bg-emerald/90 transition-all">
+            <motion.button 
+              type="submit" 
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              className="w-10 h-10 rounded-xl bg-emerald flex items-center justify-center text-white hover:bg-emerald/90 transition-all"
+            >
               <Send size={16} />
-            </button>
+            </motion.button>
           </form>
         </div>
       )}
@@ -683,12 +846,15 @@ export default function App() {
                   <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald/60">CASE STUDY: {selectedProject.toUpperCase()}</div>
                   <h2 className="text-4xl md:text-6xl font-display font-bold text-silver uppercase tracking-tighter">Architecture <br /> <span className="text-emerald">Deep Dive</span></h2>
                 </div>
-                <button 
+                <motion.button 
                   onClick={() => setSelectedProject(null)}
+                  whileHover={{ scale: 1.1, rotate: 90 }}
+                  whileTap={{ scale: 0.9 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 17 }}
                   className="w-12 h-12 rounded-full bg-emerald/5 border border-emerald/10 flex items-center justify-center text-silver/50 hover:text-emerald transition-colors"
                 >
                   <Zap size={20} />
-                </button>
+                </motion.button>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
