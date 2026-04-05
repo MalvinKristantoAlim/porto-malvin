@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence, useMotionValue, useSpring } from 'motion/react';
+import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'motion/react';
 import Lenis from 'lenis';
 import { GoogleGenAI } from "@google/genai";
 import { 
@@ -29,10 +29,93 @@ import {
   Bot
 } from 'lucide-react';
 
+// 3D Tilt Card Component
+function TiltCard({ children, className, variants, whileHover, viewport, whileInView }: any) {
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+
+  const mouseXSpring = useSpring(x);
+  const mouseYSpring = useSpring(y);
+
+  const rotateX = useTransform(mouseYSpring, [-0.5, 0.5], ["10deg", "-10deg"]);
+  const rotateY = useTransform(mouseXSpring, [-0.5, 0.5], ["-10deg", "10deg"]);
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const width = rect.width;
+    const height = rect.height;
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+    const xPct = mouseX / width - 0.5;
+    const yPct = mouseY / height - 0.5;
+    x.set(xPct);
+    y.set(yPct);
+  };
+
+  const handleMouseLeave = () => {
+    x.set(0);
+    y.set(0);
+  };
+
+  return (
+    <motion.div
+      variants={variants}
+      whileHover={whileHover}
+      whileInView={whileInView}
+      viewport={viewport}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      style={{
+        rotateY,
+        rotateX,
+        transformStyle: "preserve-3d",
+      }}
+      className={className}
+    >
+      <div style={{ transform: "translateZ(50px)", transformStyle: "preserve-3d" }} className="h-full w-full">
+        {children}
+      </div>
+    </motion.div>
+  );
+}
+
+// Magnetic Component
+function Magnetic({ children }: { children: React.ReactNode }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+
+  const handleMouse = (e: React.MouseEvent) => {
+    const { clientX, clientY } = e;
+    const { height, width, left, top } = ref.current!.getBoundingClientRect();
+    const middleX = clientX - (left + width / 2);
+    const middleY = clientY - (top + height / 2);
+    setPosition({ x: middleX * 0.3, y: middleY * 0.3 });
+  };
+
+  const reset = () => {
+    setPosition({ x: 0, y: 0 });
+  };
+
+  const { x, y } = position;
+  return (
+    <motion.div
+      ref={ref}
+      onMouseMove={handleMouse}
+      onMouseLeave={reset}
+      animate={{ x, y }}
+      transition={{ type: "spring", stiffness: 150, damping: 15, mass: 0.1 }}
+    >
+      {children}
+    </motion.div>
+  );
+}
+
 export default function App() {
   const [activeTab, setActiveTab] = useState<'home' | 'about' | 'projects' | 'achievements' | 'skills' | 'contact'>('home');
   const [localTime, setLocalTime] = useState(new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
   const [selectedProject, setSelectedProject] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadingProgress, setLoadingProgress] = useState(0);
   
   // Zero-rerender cursor values
   const mouseX = useMotionValue(0);
@@ -167,6 +250,18 @@ export default function App() {
 
     requestAnimationFrame(raf);
 
+    // Simulate loading with progress
+    const interval = setInterval(() => {
+      setLoadingProgress(prev => {
+        if (prev >= 100) {
+          clearInterval(interval);
+          setTimeout(() => setIsLoading(false), 500);
+          return 100;
+        }
+        return prev + 1;
+      });
+    }, 20);
+
     const handleMouseMove = (e: MouseEvent) => {
       mouseX.set(e.clientX);
       mouseY.set(e.clientY);
@@ -194,25 +289,26 @@ export default function App() {
     visible: { 
       opacity: 1, 
       transition: { 
-        staggerChildren: 0.08,
-        delayChildren: 0.1
+        staggerChildren: 0.1,
+        delayChildren: 0.2
       }
     },
     exit: { 
       opacity: 0,
-      transition: { duration: 0.2 }
+      transition: { duration: 0.3 }
     }
   };
 
   const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
+    hidden: { y: 40, opacity: 0, filter: 'blur(10px)' },
     visible: { 
       y: 0, 
       opacity: 1,
+      filter: 'blur(0px)',
       transition: { 
         type: "spring",
-        damping: 25,
-        stiffness: 120,
+        damping: 20,
+        stiffness: 100,
         mass: 1
       }
     }
@@ -221,6 +317,55 @@ export default function App() {
   return (
     <div className="min-h-screen bg-obsidian text-silver-dark font-sans selection:bg-emerald/30 selection:text-white grid-bg relative overflow-x-hidden transition-colors duration-500">
       
+      <AnimatePresence>
+        {isLoading && (
+          <motion.div 
+            key="preloader"
+            initial={{ opacity: 1 }}
+            exit={{ opacity: 0, y: -20, filter: 'blur(20px)' }}
+            transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+            className="fixed inset-0 z-[10000] bg-obsidian flex flex-col items-center justify-center gap-8"
+          >
+            <div className="relative">
+              <motion.div 
+                animate={{ rotate: 360 }}
+                transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                className="w-24 h-24 rounded-full border-t-2 border-emerald/40 border-r-2 border-emerald/10"
+              />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <Cpu className="text-emerald animate-pulse" size={32} />
+              </div>
+            </div>
+            <div className="flex flex-col items-center gap-4">
+              <motion.div 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 }}
+                className="text-xs font-bold uppercase tracking-[0.4em] text-emerald"
+              >
+                Logic Architect
+              </motion.div>
+              <div className="flex flex-col items-center gap-2">
+                <motion.div 
+                  initial={{ width: 0 }}
+                  animate={{ width: 200 }}
+                  transition={{ duration: 2, ease: "easeInOut" }}
+                  className="h-[1px] bg-emerald/20 overflow-hidden relative"
+                >
+                  <motion.div 
+                    style={{ width: `${loadingProgress}%` }}
+                    className="h-full bg-emerald shadow-[0_0_10px_#10b981]"
+                  />
+                </motion.div>
+                <div className="text-[10px] font-mono text-emerald/40 tabular-nums">
+                  {loadingProgress}%
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Custom Cursor */}
       <motion.div 
         className="fixed top-0 left-0 w-8 h-8 rounded-full bg-emerald/10 border border-emerald/30 pointer-events-none z-[9999] hidden md:block blur-[1px]"
@@ -242,11 +387,76 @@ export default function App() {
         }}
       />
 
+      {/* Background Aura */}
+      <motion.div 
+        className="fixed top-0 left-0 w-[800px] h-[800px] rounded-full bg-emerald/[0.03] blur-[150px] pointer-events-none z-[-1]"
+        style={{ 
+          x: cursorX, 
+          y: cursorY,
+          translateX: '-50%',
+          translateY: '-50%',
+        }}
+      />
+
+      {/* Spotlight Effect */}
+      <motion.div 
+        className="fixed inset-0 z-[-1] pointer-events-none"
+        style={{
+          background: useTransform(
+            [cursorX, cursorY],
+            ([x, y]) => `radial-gradient(600px circle at ${x}px ${y}px, rgba(16, 185, 129, 0.03), transparent 80%)`
+          )
+        }}
+      />
+
       {/* Background Glows */}
       <div className="fixed inset-0 z-[-1] overflow-hidden pointer-events-none">
-        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-emerald/10 blur-[120px] rounded-full" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-emerald/10 blur-[120px] rounded-full" />
-        <div className="absolute top-[40%] left-[60%] w-[30%] h-[30%] bg-emerald/5 blur-[100px] rounded-full" />
+        <motion.div 
+          animate={{ 
+            x: [0, 50, 0],
+            y: [0, -50, 0],
+          }}
+          transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+          className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-emerald/10 blur-[120px] rounded-full" 
+        />
+        <motion.div 
+          animate={{ 
+            x: [0, -50, 0],
+            y: [0, 50, 0],
+          }}
+          transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
+          className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-emerald/10 blur-[120px] rounded-full" 
+        />
+        <motion.div 
+          animate={{ 
+            scale: [1, 1.2, 1],
+          }}
+          transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
+          className="absolute top-[40%] left-[60%] w-[30%] h-[30%] bg-emerald/5 blur-[100px] rounded-full" 
+        />
+
+        {/* Floating Particles */}
+        {[...Array(15)].map((_, i) => (
+          <motion.div
+            key={i}
+            initial={{ 
+              x: Math.random() * 100 + "%", 
+              y: Math.random() * 100 + "%",
+              opacity: Math.random() * 0.3
+            }}
+            animate={{ 
+              y: ["-10%", "110%"],
+              opacity: [0, 0.3, 0]
+            }}
+            transition={{ 
+              duration: Math.random() * 15 + 15, 
+              repeat: Infinity, 
+              delay: Math.random() * 10,
+              ease: "linear"
+            }}
+            className="absolute w-1 h-1 bg-emerald rounded-full blur-[1px]"
+          />
+        ))}
       </div>
       
       {/* Floating Navigation */}
@@ -259,16 +469,19 @@ export default function App() {
           { id: 'skills', icon: <Cpu size={20} /> },
           { id: 'contact', icon: <Mail size={20} /> }
         ].map((item) => (
-          <motion.button 
-            key={item.id}
-            onClick={() => setActiveTab(item.id as any)} 
-            whileHover={{ scale: 1.1, y: -2 }}
-            whileTap={{ scale: 0.9 }}
-            transition={{ type: "spring", stiffness: 400, damping: 17 }}
-            className={`nav-item ${activeTab === item.id ? 'nav-item-active' : ''}`}
-          >
-            {item.icon}
-          </motion.button>
+          <div key={item.id}>
+            <Magnetic>
+              <motion.button 
+                onClick={() => setActiveTab(item.id as any)} 
+                whileHover={{ scale: 1.1, y: -2 }}
+                whileTap={{ scale: 0.9 }}
+                transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                className={`nav-item ${activeTab === item.id ? 'nav-item-active' : ''}`}
+              >
+                {item.icon}
+              </motion.button>
+            </Magnetic>
+          </div>
         ))}
       </nav>
 
@@ -284,7 +497,7 @@ export default function App() {
               className="grid grid-cols-1 md:grid-cols-12 gap-6"
             >
               {/* Main Hero Card */}
-              <motion.div 
+              <TiltCard 
                 variants={itemVariants} 
                 whileInView="visible"
                 whileHover={{ y: -5, transition: { type: "spring", stiffness: 400, damping: 25 } }}
@@ -340,10 +553,10 @@ export default function App() {
                 <div className="absolute top-12 right-12 text-emerald/[0.03] pointer-events-none">
                   <Cpu size={300} strokeWidth={0.5} />
                 </div>
-              </motion.div>
+              </TiltCard>
 
               {/* Profile Card */}
-              <motion.div 
+              <TiltCard 
                 variants={itemVariants} 
                 whileInView="visible"
                 whileHover={{ y: -5, transition: { type: "spring", stiffness: 400, damping: 25 } }}
@@ -368,7 +581,7 @@ export default function App() {
                   <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-silver/30 mb-2">DEPLOYMENT HUB</div>
                   <div className="text-2xl font-display font-bold text-silver tracking-tight">SURABAYA, ID</div>
                 </div>
-              </motion.div>
+              </TiltCard>
 
               {/* Mathematical Precision Card */}
               <motion.div 
@@ -448,7 +661,7 @@ export default function App() {
               variants={containerVariants}
               className="grid grid-cols-1 md:grid-cols-12 gap-6"
             >
-              <motion.div 
+              <TiltCard 
                 variants={itemVariants} 
                 whileHover={{ y: -5, transition: { type: "spring", stiffness: 400, damping: 25 } }}
                 className="md:col-span-4 bento-card p-0 overflow-hidden"
@@ -461,8 +674,8 @@ export default function App() {
                   className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-1000"
                   referrerPolicy="no-referrer"
                 />
-              </motion.div>
-              <motion.div 
+              </TiltCard>
+              <TiltCard 
                 variants={itemVariants} 
                 whileHover={{ y: -5, transition: { type: "spring", stiffness: 400, damping: 25 } }}
                 className="md:col-span-8 bento-card space-y-10"
@@ -489,7 +702,7 @@ export default function App() {
                     <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-silver/20">Future Destination</div>
                   </div>
                 </div>
-              </motion.div>
+              </TiltCard>
             </motion.div>
           )}
 
@@ -502,7 +715,7 @@ export default function App() {
               variants={containerVariants}
               className="grid grid-cols-1 md:grid-cols-12 gap-6"
             >
-              <motion.div 
+              <TiltCard 
                 variants={itemVariants} 
                 whileHover={{ y: -5, transition: { type: "spring", stiffness: 400, damping: 25 } }}
                 className="md:col-span-5 bento-card p-0 overflow-hidden group/project relative"
@@ -521,8 +734,8 @@ export default function App() {
                     <div className="text-xl font-display font-bold text-silver tracking-tight">LOGISTICS OPTIMIZER</div>
                   </div>
                 </div>
-              </motion.div>
-              <motion.div 
+              </TiltCard>
+              <TiltCard 
                 variants={itemVariants} 
                 whileHover={{ y: -5, transition: { type: "spring", stiffness: 400, damping: 25 } }}
                 className="md:col-span-7 bento-card flex flex-col justify-center space-y-10"
@@ -550,7 +763,7 @@ export default function App() {
                     Technical Analysis <ExternalLink size={18} className="group-hover:translate-x-1 transition-transform" />
                   </motion.button>
                 </div>
-              </motion.div>
+              </TiltCard>
             </motion.div>
           )}
 
@@ -563,7 +776,7 @@ export default function App() {
               variants={containerVariants}
               className="grid grid-cols-1 md:grid-cols-12 gap-6"
             >
-              <motion.div 
+              <TiltCard 
                 variants={itemVariants} 
                 whileHover={{ y: -5, transition: { type: "spring", stiffness: 400, damping: 25 } }}
                 className="md:col-span-5 bento-card p-0 overflow-hidden"
@@ -576,8 +789,8 @@ export default function App() {
                   className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-1000"
                   referrerPolicy="no-referrer"
                 />
-              </motion.div>
-              <motion.div 
+              </TiltCard>
+              <TiltCard 
                 variants={itemVariants} 
                 whileHover={{ y: -5, transition: { type: "spring", stiffness: 400, damping: 25 } }}
                 className="md:col-span-7 bento-card flex flex-col justify-center space-y-10"
@@ -599,7 +812,7 @@ export default function App() {
                     View Certification <ExternalLink size={18} className="group-hover:rotate-12 transition-transform" />
                   </a>
                 </div>
-              </motion.div>
+              </TiltCard>
             </motion.div>
           )}
 
@@ -622,7 +835,7 @@ export default function App() {
                 { name: "JavaScript", percent: 94, icon: <Binary size={18} /> },
                 { name: "Git", percent: 92, icon: <Github size={18} /> }
               ].map((skill, index) => (
-                <motion.div 
+                <TiltCard 
                   key={skill.name}
                   variants={itemVariants}
                   whileInView="visible"
@@ -647,7 +860,7 @@ export default function App() {
                       />
                     </div>
                   </div>
-                </motion.div>
+                </TiltCard>
               ))}
             </motion.div>
           )}
@@ -661,7 +874,7 @@ export default function App() {
               variants={containerVariants}
               className="grid grid-cols-1 md:grid-cols-12 gap-6"
             >
-              <motion.div 
+              <TiltCard 
                 variants={itemVariants} 
                 whileHover={{ y: -5, transition: { type: "spring", stiffness: 400, damping: 25 } }}
                 className="md:col-span-8 bento-card flex flex-col justify-center py-20 md:py-32 space-y-12 metallic-shine"
@@ -706,7 +919,7 @@ export default function App() {
                 <div className="absolute top-1/2 right-0 -translate-y-1/2 text-emerald/[0.02] pointer-events-none">
                   <Zap size={400} strokeWidth={0.5} />
                 </div>
-              </motion.div>
+              </TiltCard>
 
               <motion.div variants={itemVariants} className="md:col-span-4 space-y-6">
                 <div className="bento-card space-y-4 group">
@@ -754,15 +967,17 @@ export default function App() {
       </footer>
 
       {/* ChatBot Toggle */}
-      <motion.button 
-        onClick={() => setIsChatOpen(!isChatOpen)}
-        whileHover={{ scale: 1.1, rotate: 5 }}
-        whileTap={{ scale: 0.9 }}
-        transition={{ type: "spring", stiffness: 400, damping: 17 }}
-        className="fixed bottom-24 right-8 z-[100] w-14 h-14 rounded-full bg-emerald shadow-[0_0_20px_rgba(16,185,129,0.4)] flex items-center justify-center text-white transition-all"
-      >
-        {isChatOpen ? <X size={24} /> : <Bot size={24} />}
-      </motion.button>
+      <Magnetic>
+        <motion.button 
+          onClick={() => setIsChatOpen(!isChatOpen)}
+          whileHover={{ scale: 1.1, rotate: 5 }}
+          whileTap={{ scale: 0.9 }}
+          transition={{ type: "spring", stiffness: 400, damping: 17 }}
+          className="fixed bottom-24 right-8 z-[100] w-14 h-14 rounded-full bg-emerald shadow-[0_0_20px_rgba(16,185,129,0.4)] flex items-center justify-center text-white transition-all"
+        >
+          {isChatOpen ? <X size={24} /> : <Bot size={24} />}
+        </motion.button>
+      </Magnetic>
 
       {/* Chat Window */}
       {isChatOpen && (
