@@ -31,9 +31,6 @@ import {
 export default function App() {
   const [activeTab, setActiveTab] = useState<'home' | 'about' | 'projects' | 'achievements' | 'skills' | 'contact'>('home');
   const [localTime, setLocalTime] = useState(new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
-  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
-  const [isPointer, setIsPointer] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(true);
   const [selectedProject, setSelectedProject] = useState<string | null>(null);
   const [typingText, setTypingText] = useState('');
   const [isChatOpen, setIsChatOpen] = useState(false);
@@ -128,42 +125,6 @@ export default function App() {
     window.location.href = mailtoLink;
   };
 
-  // Update mouse position and handle spotlight effect
-  useEffect(() => {
-    let rafId: number;
-    const handleMouseMove = (e: MouseEvent) => {
-      rafId = requestAnimationFrame(() => {
-        setMousePos({ x: e.clientX, y: e.clientY });
-        
-        const target = e.target as HTMLElement;
-        setIsPointer(window.getComputedStyle(target).cursor === 'pointer');
-
-        // Optimized Spotlight effect: only update the hovered card
-        const card = target.closest('.spotlight-card') as HTMLElement;
-        if (card) {
-          const rect = card.getBoundingClientRect();
-          const x = e.clientX - rect.left;
-          const y = e.clientY - rect.top;
-          card.style.setProperty('--mouse-x', `${x}px`);
-          card.style.setProperty('--mouse-y', `${y}px`);
-        }
-      });
-    };
-
-    window.addEventListener('mousemove', handleMouseMove, { passive: true });
-    return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      cancelAnimationFrame(rafId);
-    };
-  }, []);
-
-  // API Key Check
-  useEffect(() => {
-    if (!process.env.GEMINI_API_KEY) {
-      console.warn("GEMINI_API_KEY is missing. AI Chatbot will not function correctly.");
-    }
-  }, []);
-
   // Update local time
   useEffect(() => {
     const timer = setInterval(() => {
@@ -211,39 +172,8 @@ export default function App() {
   };
 
   return (
-    <div className={`min-h-screen ${isDarkMode ? 'bg-obsidian text-silver-dark' : 'light-mode bg-obsidian text-silver-dark'} font-sans selection:bg-emerald/30 selection:text-white grid-bg relative overflow-x-hidden cursor-none transition-colors duration-500`}>
+    <div className="min-h-screen bg-obsidian text-silver-dark font-sans selection:bg-emerald/30 selection:text-white grid-bg relative overflow-x-hidden transition-colors duration-500">
       
-      {/* Theme Toggle */}
-      <button 
-        onClick={() => setIsDarkMode(!isDarkMode)}
-        className="fixed top-8 right-8 z-[100] w-12 h-12 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-xl flex items-center justify-center text-white/50 hover:text-emerald hover:border-emerald/20 transition-all active:scale-90 spotlight-card"
-      >
-        {isDarkMode ? <Sparkles size={20} /> : <Zap size={20} className="text-emerald" />}
-      </button>
-
-      {/* Custom Cursor */}
-      <motion.div 
-        className="fixed top-0 left-0 w-8 h-8 rounded-full bg-emerald/20 border border-emerald/50 pointer-events-none z-[9999] hidden md:block blur-[2px]"
-        style={{ willChange: 'transform' }}
-        animate={{ 
-          x: mousePos.x - 16, 
-          y: mousePos.y - 16,
-          scale: isPointer ? 1.5 : 1,
-          backgroundColor: isPointer ? 'rgba(16, 185, 129, 0.4)' : 'rgba(16, 185, 129, 0.2)'
-        }}
-        transition={{ type: 'spring', damping: 25, stiffness: 250, mass: 0.5 }}
-      />
-      <motion.div 
-        className="fixed top-0 left-0 w-2 h-2 rounded-full bg-emerald pointer-events-none z-[9999] hidden md:block shadow-[0_0_15px_#10b981]"
-        style={{ willChange: 'transform' }}
-        animate={{ 
-          x: mousePos.x - 4, 
-          y: mousePos.y - 4,
-          scale: isPointer ? 0.5 : 1
-        }}
-        transition={{ type: 'spring', damping: 30, stiffness: 400, mass: 0.2 }}
-      />
-
       {/* Background Glows */}
       <div className="fixed inset-0 z-[-1] overflow-hidden pointer-events-none">
         <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-emerald/10 blur-[120px] rounded-full" />
@@ -277,7 +207,7 @@ export default function App() {
                 variants={itemVariants} 
                 whileInView="visible"
                 viewport={{ once: true, margin: "-100px" }}
-                className="md:col-span-8 bento-card flex flex-col justify-between min-h-[350px] md:min-h-[400px] metallic-shine spotlight-card"
+                className="md:col-span-8 bento-card flex flex-col justify-between min-h-[350px] md:min-h-[400px] metallic-shine"
               >
                 <div className="space-y-8 relative z-10">
                   <div className="flex items-center gap-3 text-[10px] font-bold uppercase tracking-[0.2em] text-emerald/80">
@@ -314,7 +244,7 @@ export default function App() {
                 variants={itemVariants} 
                 whileInView="visible"
                 viewport={{ once: true, margin: "-100px" }}
-                className="md:col-span-4 bento-card p-0 overflow-hidden group flex flex-col spotlight-card"
+                className="md:col-span-4 bento-card p-0 overflow-hidden group flex flex-col"
               >
                 <div className="flex-1 overflow-hidden relative">
                   <img 
@@ -340,7 +270,7 @@ export default function App() {
                 variants={itemVariants} 
                 whileInView="visible"
                 viewport={{ once: true, margin: "-100px" }}
-                className="md:col-span-5 bento-card space-y-6 spotlight-card"
+                className="md:col-span-5 bento-card space-y-6"
               >
                 <div className="w-12 h-12 rounded-2xl bg-emerald/5 border border-emerald/10 flex items-center justify-center">
                   <Activity className="text-emerald" size={20} />
@@ -359,7 +289,7 @@ export default function App() {
                 variants={itemVariants} 
                 whileInView="visible"
                 viewport={{ once: true, margin: "-100px" }}
-                className="md:col-span-4 bento-card space-y-6 spotlight-card"
+                className="md:col-span-4 bento-card space-y-6"
               >
                 <div className="flex justify-between items-start">
                   <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/5 flex items-center justify-center">
@@ -386,7 +316,7 @@ export default function App() {
                 variants={itemVariants} 
                 whileInView="visible"
                 viewport={{ once: true, margin: "-100px" }}
-                className="md:col-span-3 bento-card flex flex-col justify-between spotlight-card"
+                className="md:col-span-3 bento-card flex flex-col justify-between"
               >
                 <div className="flex gap-3">
                   <a href="https://github.com/MalvinKristantoAlim" target="_blank" className="w-11 h-11 rounded-xl bg-white/5 border border-white/5 flex items-center justify-center hover:bg-white/10 transition-all hover:scale-105 active:scale-95"><Github size={18} className="text-white/80" /></a>
@@ -410,7 +340,7 @@ export default function App() {
               variants={containerVariants}
               className="grid grid-cols-1 md:grid-cols-12 gap-6"
             >
-              <motion.div variants={itemVariants} className="md:col-span-4 bento-card p-0 overflow-hidden spotlight-card">
+              <motion.div variants={itemVariants} className="md:col-span-4 bento-card p-0 overflow-hidden">
                 <img 
                   src={profileUrl} 
                   alt="Malvin Profile" 
@@ -419,7 +349,7 @@ export default function App() {
                   referrerPolicy="no-referrer"
                 />
               </motion.div>
-              <motion.div variants={itemVariants} className="md:col-span-8 bento-card space-y-10 spotlight-card">
+              <motion.div variants={itemVariants} className="md:col-span-8 bento-card space-y-10">
                 <div className="space-y-4">
                   <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald/60">BIOGRAPHY</div>
                   <h2 className="text-5xl sm:text-6xl md:text-8xl font-display font-bold leading-[0.8] tracking-[-0.06em] mb-4 uppercase text-silver">THE <br /> <span className="text-emerald">VISIONARY</span></h2>
@@ -455,7 +385,7 @@ export default function App() {
               variants={containerVariants}
               className="grid grid-cols-1 md:grid-cols-12 gap-6"
             >
-              <motion.div variants={itemVariants} className="md:col-span-5 bento-card p-0 overflow-hidden spotlight-card group/project relative">
+              <motion.div variants={itemVariants} className="md:col-span-5 bento-card p-0 overflow-hidden group/project relative">
                 <img 
                   src={projectUrl} 
                   alt="Anomani Project" 
@@ -504,7 +434,7 @@ export default function App() {
               variants={containerVariants}
               className="grid grid-cols-1 md:grid-cols-12 gap-6"
             >
-              <motion.div variants={itemVariants} className="md:col-span-5 bento-card p-0 overflow-hidden spotlight-card">
+              <motion.div variants={itemVariants} className="md:col-span-5 bento-card p-0 overflow-hidden">
                 <img 
                   src={raiseUrl} 
                   alt="RAISE 2025" 
@@ -559,7 +489,7 @@ export default function App() {
                   variants={itemVariants}
                   whileInView="visible"
                   viewport={{ once: true, margin: "-50px" }}
-                  className="bento-card space-y-8 group spotlight-card"
+                  className="bento-card space-y-8 group"
                 >
                   <div className="flex justify-between items-start">
                     <div className="w-10 h-10 rounded-xl bg-emerald/5 border border-emerald/10 flex items-center justify-center text-emerald/40 group-hover:text-emerald group-hover:border-emerald/20 transition-all duration-500">
@@ -592,7 +522,7 @@ export default function App() {
               variants={containerVariants}
               className="grid grid-cols-1 md:grid-cols-12 gap-6"
             >
-              <motion.div variants={itemVariants} className="md:col-span-8 bento-card flex flex-col justify-center py-20 md:py-32 space-y-12 metallic-shine spotlight-card">
+              <motion.div variants={itemVariants} className="md:col-span-8 bento-card flex flex-col justify-center py-20 md:py-32 space-y-12 metallic-shine">
                 <div className="space-y-6 relative z-10">
                   <div className="flex items-center gap-3 text-[10px] font-bold uppercase tracking-[0.2em] text-emerald/60">
                     <div className="status-dot" /> INITIATE PROTOCOL
@@ -630,11 +560,11 @@ export default function App() {
               </motion.div>
 
               <motion.div variants={itemVariants} className="md:col-span-4 space-y-6">
-                <div className="bento-card space-y-4 group spotlight-card">
+                <div className="bento-card space-y-4 group">
                   <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-silver/20">DEPLOYMENT BASE</div>
                   <div className="text-xl font-display font-bold text-silver group-hover:text-emerald transition-all duration-500 tracking-tight">Surabaya, Indonesia</div>
                 </div>
-                <div className="bento-card space-y-6 spotlight-card">
+                <div className="bento-card space-y-6">
                   <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-silver/20">SOCIAL NETWORK</div>
                   <div className="flex gap-4">
                     {[
@@ -674,65 +604,60 @@ export default function App() {
       {/* ChatBot Toggle */}
       <button 
         onClick={() => setIsChatOpen(!isChatOpen)}
-        className="fixed bottom-24 right-8 z-[100] w-14 h-14 rounded-full bg-emerald shadow-[0_0_20px_rgba(16,185,129,0.4)] flex items-center justify-center text-white hover:scale-110 active:scale-90 transition-all spotlight-card"
+        className="fixed bottom-24 right-8 z-[100] w-14 h-14 rounded-full bg-emerald shadow-[0_0_20px_rgba(16,185,129,0.4)] flex items-center justify-center text-white hover:scale-110 active:scale-90 transition-all"
       >
         {isChatOpen ? <X size={24} /> : <Bot size={24} />}
       </button>
 
       {/* Chat Window */}
-      <AnimatePresence>
-        {isChatOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: 20, scale: 0.9 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 20, scale: 0.9 }}
-            className="fixed bottom-40 right-8 z-[100] w-[350px] max-w-[90vw] h-[500px] bento-card flex flex-col p-0 overflow-hidden shadow-2xl border-emerald/20 spotlight-card"
-          >
-            <div className="p-4 bg-emerald/10 border-b border-emerald/20 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="status-dot" />
-                <span className="text-xs font-bold uppercase tracking-widest text-silver">System Assistant</span>
+      {isChatOpen && (
+        <div
+          className="fixed bottom-40 right-8 z-[100] w-[350px] max-w-[90vw] h-[500px] bento-card flex flex-col p-0 overflow-hidden shadow-2xl border-emerald/20"
+        >
+          <div className="p-4 bg-emerald/10 border-b border-emerald/20 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="status-dot" />
+              <span className="text-xs font-bold uppercase tracking-widest text-silver">System Assistant</span>
+            </div>
+            <button onClick={() => setIsChatOpen(false)} className="text-silver/30 hover:text-silver transition-colors">
+              <X size={16} />
+            </button>
+          </div>
+          
+          <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
+            {chatMessages.map((msg, i) => (
+              <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                <div className={`max-w-[80%] p-3 rounded-2xl text-sm ${msg.role === 'user' ? 'bg-emerald text-white' : 'bg-emerald/5 text-silver'}`}>
+                  {msg.text}
+                </div>
               </div>
-              <button onClick={() => setIsChatOpen(false)} className="text-silver/30 hover:text-silver transition-colors">
-                <X size={16} />
-              </button>
-            </div>
-            
-            <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
-              {chatMessages.map((msg, i) => (
-                <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`max-w-[80%] p-3 rounded-2xl text-sm ${msg.role === 'user' ? 'bg-emerald text-white' : 'bg-emerald/5 text-silver'}`}>
-                    {msg.text}
-                  </div>
+            ))}
+            {isTyping && (
+              <div className="flex justify-start">
+                <div className="bg-emerald/5 p-3 rounded-2xl flex gap-1">
+                  <div className="w-1.5 h-1.5 rounded-full bg-emerald animate-bounce" />
+                  <div className="w-1.5 h-1.5 rounded-full bg-emerald animate-bounce [animation-delay:0.2s]" />
+                  <div className="w-1.5 h-1.5 rounded-full bg-emerald animate-bounce [animation-delay:0.4s]" />
                 </div>
-              ))}
-              {isTyping && (
-                <div className="flex justify-start">
-                  <div className="bg-emerald/5 p-3 rounded-2xl flex gap-1">
-                    <div className="w-1.5 h-1.5 rounded-full bg-emerald animate-bounce" />
-                    <div className="w-1.5 h-1.5 rounded-full bg-emerald animate-bounce [animation-delay:0.2s]" />
-                    <div className="w-1.5 h-1.5 rounded-full bg-emerald animate-bounce [animation-delay:0.4s]" />
-                  </div>
-                </div>
-              )}
-              <div ref={chatEndRef} />
-            </div>
+              </div>
+            )}
+            <div ref={chatEndRef} />
+          </div>
 
-            <form onSubmit={handleSendMessage} className="p-4 bg-emerald/5 border-t border-emerald/10 flex gap-2">
-              <input 
-                type="text" 
-                value={userInput}
-                onChange={(e) => setUserInput(e.target.value)}
-                placeholder="Ask about Malvin..." 
-                className="flex-1 bg-emerald/5 border border-emerald/10 rounded-xl px-4 py-2 text-sm text-silver focus:outline-none focus:border-emerald/30 transition-all"
-              />
-              <button type="submit" className="w-10 h-10 rounded-xl bg-emerald flex items-center justify-center text-white hover:bg-emerald/90 transition-all">
-                <Send size={16} />
-              </button>
-            </form>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          <form onSubmit={handleSendMessage} className="p-4 bg-emerald/5 border-t border-emerald/10 flex gap-2">
+            <input 
+              type="text" 
+              value={userInput}
+              onChange={(e) => setUserInput(e.target.value)}
+              placeholder="Ask about Malvin..." 
+              className="flex-1 bg-emerald/5 border border-emerald/10 rounded-xl px-4 py-2 text-sm text-silver focus:outline-none focus:border-emerald/30 transition-all"
+            />
+            <button type="submit" className="w-10 h-10 rounded-xl bg-emerald flex items-center justify-center text-white hover:bg-emerald/90 transition-all">
+              <Send size={16} />
+            </button>
+          </form>
+        </div>
+      )}
 
       {/* Case Study Modal */}
       <AnimatePresence>
@@ -748,7 +673,7 @@ export default function App() {
               initial={{ scale: 0.9, y: 20 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.9, y: 20 }}
-              className="w-full max-w-4xl max-h-[90vh] bento-card overflow-y-auto space-y-12 p-8 md:p-12 metallic-shine spotlight-card"
+              className="w-full max-w-4xl max-h-[90vh] bento-card overflow-y-auto space-y-12 p-8 md:p-12 metallic-shine"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex justify-between items-start">
