@@ -14,22 +14,7 @@
   --color-grid: rgba(255, 255, 255, 0.02);
 }
 
-.light-mode {
-  --color-obsidian: #f8fafc;
-  --color-emerald: #059669;
-  --color-silver: #1e293b;
-  --color-silver-dark: #475569;
-  --color-border-soft: rgba(0, 0, 0, 0.05);
-  --color-grid: rgba(0, 0, 0, 0.05);
-}
-
 @layer base {
-  @media (min-width: 768px) {
-    * {
-      cursor: none !important;
-    }
-  }
-  
   body {
     @apply bg-obsidian text-silver-dark font-sans antialiased selection:bg-emerald/30 selection:text-white transition-colors duration-500;
     background-image: 
@@ -60,26 +45,6 @@
 
   .spotlight-card {
     position: relative;
-  }
-
-  .spotlight-card::before {
-    content: "";
-    position: absolute;
-    inset: -1px;
-    background: radial-gradient(
-      400px circle at var(--mouse-x) var(--mouse-y),
-      rgba(16, 185, 129, 0.1),
-      transparent 50%
-    );
-    z-index: 0;
-    opacity: 0;
-    transition: opacity 0.3s;
-    pointer-events: none;
-    border-radius: inherit;
-  }
-
-  .spotlight-card:hover::before {
-    opacity: 1;
   }
 
   .status-dot {
