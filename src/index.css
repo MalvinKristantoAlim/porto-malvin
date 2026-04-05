@@ -13,51 +13,96 @@
   --color-border-soft: rgba(255, 255, 255, 0.05);
 }
 
+.light-mode {
+  --color-obsidian: #f8fafc;
+  --color-emerald: #059669;
+  --color-silver: #1e293b;
+  --color-silver-dark: #475569;
+  --color-border-soft: rgba(0, 0, 0, 0.05);
+}
+
 @layer base {
+  @media (min-width: 768px) {
+    * {
+      cursor: none !important;
+    }
+  }
+  
   body {
-    @apply bg-obsidian text-silver-dark font-sans antialiased selection:bg-emerald/30 selection:text-white;
+    @apply bg-obsidian text-silver-dark font-sans antialiased selection:bg-emerald/30 selection:text-white transition-colors duration-500;
     background-image: 
       radial-gradient(circle at 0% 0%, rgba(16, 185, 129, 0.05) 0%, transparent 50%),
       radial-gradient(circle at 100% 100%, rgba(16, 185, 129, 0.05) 0%, transparent 50%),
       linear-gradient(to bottom, transparent, rgba(16, 185, 129, 0.02));
+    scroll-behavior: smooth;
   }
   
   h1, h2, h3, h4, h5, h6 {
-    @apply font-display font-bold text-white tracking-tighter uppercase;
+    @apply font-display font-bold text-silver tracking-tighter uppercase;
   }
 }
 
 @layer components {
   .bento-card {
-    @apply bg-[#0e0e0e] border border-white/5 rounded-xl p-6 md:p-8 transition-all duration-500 relative overflow-hidden;
+    @apply bg-obsidian border border-white/[0.03] rounded-2xl p-6 md:p-8 transition-all duration-700 relative overflow-hidden;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02);
   }
   
   .bento-card:hover {
-    @apply border-emerald/20 bg-[#111111] shadow-[0_0_30px_rgba(16,185,129,0.05)];
+    @apply border-emerald/30;
+    box-shadow: 
+      inset 0 0 0 1px rgba(16, 185, 129, 0.1),
+      0 20px 40px -20px rgba(0, 0, 0, 0.5),
+      0 0 50px -10px rgba(16, 185, 129, 0.05);
+  }
+
+  .spotlight-card {
+    position: relative;
+  }
+
+  .spotlight-card::before {
+    content: "";
+    position: absolute;
+    inset: -1px;
+    background: radial-gradient(
+      600px circle at var(--mouse-x) var(--mouse-y),
+      rgba(16, 185, 129, 0.15),
+      transparent 40%
+    );
+    z-index: 0;
+    opacity: 0;
+    transition: opacity 0.5s;
+    pointer-events: none;
+    border-radius: inherit;
+  }
+
+  .spotlight-card:hover::before {
+    opacity: 1;
   }
 
   .status-dot {
-    @apply w-2 h-2 rounded-full bg-emerald shadow-[0_0_10px_#10b981];
+    @apply w-1.5 h-1.5 rounded-full bg-emerald shadow-[0_0_12px_#10b981];
   }
 
   .nav-floating {
-    @apply fixed bottom-8 left-1/2 -translate-x-1/2 z-50 px-2 py-2 bg-[#1a1a1a]/80 border border-white/10 backdrop-blur-xl rounded-2xl flex items-center gap-1;
+    @apply fixed bottom-8 left-1/2 -translate-x-1/2 z-50 px-2 py-2 bg-obsidian/60 border border-white/5 backdrop-blur-2xl rounded-2xl flex items-center gap-1;
+    box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.5);
   }
 
   .nav-item {
-    @apply p-3 rounded-xl transition-all duration-300 text-silver-dark hover:text-white hover:bg-white/5;
+    @apply p-3 rounded-xl transition-all duration-500 text-silver-dark/60 hover:text-silver hover:bg-white/5;
   }
 
   .nav-item-active {
-    @apply bg-emerald text-white hover:bg-emerald/90;
+    @apply bg-emerald/10 text-emerald border border-emerald/20 hover:bg-emerald/20;
   }
 
   .btn-primary {
-    @apply px-8 py-3 bg-emerald text-white font-bold rounded-lg hover:bg-emerald/90 transition-all flex items-center gap-2 shadow-[0_0_20px_rgba(16,185,129,0.3)];
+    @apply px-8 py-3 bg-emerald text-white font-bold rounded-xl hover:bg-emerald/90 transition-all flex items-center gap-2 shadow-[0_10px_20px_-5px_rgba(16,185,129,0.4)] active:scale-95 border border-emerald/20;
   }
 
   .btn-secondary {
-    @apply px-8 py-3 border border-white/10 text-white font-bold rounded-lg hover:border-emerald/50 hover:bg-emerald/5 transition-all;
+    @apply px-8 py-3 border border-white/5 text-silver font-bold rounded-xl hover:border-emerald/30 hover:bg-emerald/5 transition-all active:scale-95;
   }
 
   .metallic-shine {
@@ -95,6 +140,7 @@
 }
 
 .grid-bg {
-  background-image: radial-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 0);
+  background-image: radial-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 0);
   background-size: 40px 40px;
+  mask-image: radial-gradient(circle at 50% 50%, black 30%, transparent 90%);
 }
