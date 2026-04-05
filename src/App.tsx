@@ -87,7 +87,7 @@ export default function App() {
         <button onClick={() => setActiveTab('contact')} className={`nav-item ${activeTab === 'contact' ? 'nav-item-active' : ''}`}><Mail size={20} /></button>
       </nav>
 
-      <main className="max-w-7xl mx-auto px-6 pt-12 pb-40">
+      <main className="max-w-7xl mx-auto px-4 md:px-6 pt-8 md:pt-12 pb-40">
         <AnimatePresence mode="wait">
           {activeTab === 'home' && (
             <motion.div
@@ -99,21 +99,21 @@ export default function App() {
               className="grid grid-cols-1 md:grid-cols-12 gap-6"
             >
               {/* Main Hero Card */}
-              <motion.div variants={itemVariants} className="md:col-span-8 bento-card flex flex-col justify-between min-h-[400px] metallic-shine">
+              <motion.div variants={itemVariants} className="md:col-span-8 bento-card flex flex-col justify-between min-h-[350px] md:min-h-[400px] metallic-shine">
                 <div className="space-y-6">
                   <div className="flex items-center gap-3 text-[10px] font-bold uppercase tracking-widest text-emerald">
                     <div className="status-dot" /> SYSTEM STATUS: OPTIMIZED
                   </div>
-                  <h1 className="text-6xl md:text-9xl font-display font-bold leading-[0.8] tracking-[-0.05em] text-white">
+                  <h1 className="text-5xl sm:text-6xl md:text-9xl font-display font-bold leading-[0.8] tracking-[-0.05em] text-white">
                     MALVIN <br /> KRISTANTO <br /> ALIM
                   </h1>
                   <p className="text-xl text-silver-dark font-medium max-w-2xl leading-relaxed">
                     System Architect & <span className="text-emerald">Mathematical Optimizer</span> specializing in <span className="text-white">high-performance digital infrastructures</span> and algorithmic precision.
                   </p>
                 </div>
-                <div className="flex items-center gap-4 pt-8">
-                  <button onClick={() => setActiveTab('projects')} className="btn-primary">View Projects <ChevronRight size={18} /></button>
-                  <button onClick={() => setActiveTab('contact')} className="btn-secondary">Contact Me</button>
+                <div className="flex flex-col sm:flex-row items-center gap-4 pt-8">
+                  <button onClick={() => setActiveTab('projects')} className="btn-primary w-full sm:w-auto justify-center">View Projects <ChevronRight size={18} /></button>
+                  <button onClick={() => setActiveTab('contact')} className="btn-secondary w-full sm:w-auto text-center">Contact Me</button>
                 </div>
                 <div className="absolute top-8 right-8 text-emerald/10">
                   <Cpu size={200} strokeWidth={1} />
@@ -206,7 +206,7 @@ export default function App() {
                 />
               </motion.div>
               <motion.div variants={itemVariants} className="md:col-span-8 bento-card">
-                <h2 className="text-6xl md:text-8xl font-display font-bold leading-[0.8] tracking-[-0.05em] mb-12 uppercase">THE <br /> VISIONARY</h2>
+                <h2 className="text-5xl sm:text-6xl md:text-8xl font-display font-bold leading-[0.8] tracking-[-0.05em] mb-12 uppercase">THE <br /> VISIONARY</h2>
                 <div className="space-y-8 text-xl text-silver-dark font-medium leading-relaxed">
                   <p>
                     I am <span className="text-white">Malvin Kristanto Alim</span>, a dedicated student at <span className="text-emerald">SMAK Frateran Surabaya</span>. As I approach graduation, my focus is set on <span className="text-emerald">Universitas Surabaya</span>, where I plan to deepen my expertise in informatics and mathematical optimization.
@@ -247,13 +247,13 @@ export default function App() {
                     referrerPolicy="no-referrer"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-obsidian via-transparent to-transparent" />
-                  <div className="absolute bottom-12 left-12 right-12 flex justify-between items-end">
+                  <div className="absolute bottom-6 left-6 right-6 md:bottom-12 md:left-12 md:right-12 flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
                     <div className="space-y-4">
                       <div className="px-4 py-1 rounded-full bg-emerald/20 border border-emerald/30 text-[10px] font-bold text-emerald inline-block">PROJECT 2025</div>
-                      <h2 className="text-6xl md:text-9xl font-display font-bold leading-[0.8] tracking-[-0.05em] text-white">ANOMANI <br /> PROJECT</h2>
+                      <h2 className="text-5xl md:text-9xl font-display font-bold leading-[0.8] tracking-[-0.05em] text-white uppercase">ANOMANI <br /> PROJECT</h2>
                     </div>
-                    <div className="hidden md:block text-right max-w-md">
-                      <p className="text-silver-dark font-medium leading-relaxed">
+                    <div className="text-left md:text-right max-w-md">
+                      <p className="text-sm md:text-silver-dark font-medium leading-relaxed">
                         The Anomani Project is a comprehensive study on logistics optimization. By applying <span className="text-emerald">geometric algorithms</span> and <span className="text-emerald">linear programming</span>, we redesigned the packaging for NIKI ECHO to minimize empty space during transit. The system calculates optimal stacking patterns and material distribution, resulting in a significant reduction in carbon footprint and a <span className="text-white">15% improvement</span> in overall shipping efficiency.
                       </p>
                     </div>
@@ -283,13 +283,13 @@ export default function App() {
                     />
                     <div className="absolute inset-0 bg-gradient-to-r from-obsidian/80 to-transparent lg:hidden" />
                   </div>
-                  <div className="p-12 flex flex-col justify-center space-y-8">
+                  <div className="p-8 md:p-12 flex flex-col justify-center space-y-8">
                     <div className="inline-flex items-center gap-3 px-5 py-2 rounded-full bg-white/5 border border-white/10 text-[10px] font-bold uppercase tracking-widest text-white/50 w-fit">
                       <Award size={14} /> National Recognition
                     </div>
-                    <h2 className="text-6xl md:text-8xl font-display font-bold leading-[0.8] tracking-[-0.05em] text-white uppercase">RAISE 2025 <br /> <span className="text-emerald drop-shadow-[0_0_15px_rgba(16,185,129,0.6)]">FINALIST</span></h2>
-                    <p className="text-xl text-silver-dark font-medium leading-relaxed">
-                      National Accounting Competition Finalist at Ciputra University. Recognized for analytical excellence and strategic problem solving in complex financial simulations.
+                    <h2 className="text-5xl md:text-8xl font-display font-bold leading-[0.8] tracking-[-0.05em] text-white uppercase">RAISE 2025 <br /> <span className="text-emerald drop-shadow-[0_0_15px_rgba(16,185,129,0.6)]">FINALIST</span></h2>
+                    <p className="text-lg md:text-xl text-silver-dark font-medium leading-relaxed">
+                      National Accounting Competition Finalist at Ciputra University. Recognized for analytical excellence and strategic problem solving in complex financial simulations, where I applied mathematical models to optimize resource allocation and financial forecasting.
                     </p>
                     <div className="flex justify-start pt-4">
                       <a 
@@ -358,7 +358,7 @@ export default function App() {
               className="grid grid-cols-1 md:grid-cols-12 gap-6"
             >
               <motion.div variants={itemVariants} className="md:col-span-8 bento-card flex flex-col justify-center py-24 space-y-12 metallic-shine">
-                <h2 className="text-7xl md:text-9xl font-display font-bold text-white leading-[0.8] tracking-[-0.05em]">
+                <h2 className="text-5xl sm:text-7xl md:text-9xl font-display font-bold text-white leading-[0.8] tracking-[-0.05em]">
                   LET'S <br /> <span className="text-emerald drop-shadow-[0_0_20px_rgba(16,185,129,0.7)]">OPTIMIZE</span>
                 </h2>
                 <p className="text-2xl text-silver-dark font-medium max-w-2xl leading-relaxed">
