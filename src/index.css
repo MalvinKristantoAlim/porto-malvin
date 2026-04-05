@@ -1,52 +1,71 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@700&display=swap');
 @import "tailwindcss";
 
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-display: "Space Grotesk", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
   
-  --color-obsidian: #050505;
-  --color-emerald-primary: #10b981;
-  --color-emerald-dark: #064e3b;
-  --color-emerald-glass: rgba(16, 185, 129, 0.1);
-  --color-emerald-border: rgba(16, 185, 129, 0.2);
-}
-
-@keyframes scan {
-  0% { top: 0%; opacity: 0; }
-  10% { opacity: 1; }
-  90% { opacity: 1; }
-  100% { top: 100%; opacity: 0; }
+  --color-obsidian: #0a0a0a;
+  --color-emerald: #10b981;
+  --color-silver: #e2e8f0;
+  --color-silver-dark: #525252;
+  --color-border-soft: rgba(255, 255, 255, 0.05);
 }
 
 @layer base {
   body {
-    @apply bg-obsidian text-gray-300 font-sans selection:bg-emerald-primary/30 selection:text-emerald-primary;
+    @apply bg-obsidian text-silver-dark font-sans antialiased selection:bg-emerald/30 selection:text-white;
+    background-image: 
+      radial-gradient(circle at 0% 0%, rgba(16, 185, 129, 0.05) 0%, transparent 50%),
+      radial-gradient(circle at 100% 100%, rgba(16, 185, 129, 0.05) 0%, transparent 50%);
   }
   
   h1, h2, h3, h4, h5, h6 {
-    @apply font-display text-white tracking-tight;
+    @apply font-display font-bold text-white tracking-tighter uppercase;
   }
 }
 
-.glass-card {
-  @apply bg-emerald-glass border border-emerald-border backdrop-blur-md rounded-2xl transition-all duration-300;
+@layer components {
+  .bento-card {
+    @apply bg-[#0e0e0e] border border-white/5 rounded-xl p-8 transition-all duration-500 relative overflow-hidden;
+  }
+  
+  .bento-card:hover {
+    @apply border-emerald/20 bg-[#111111] shadow-[0_0_30px_rgba(16,185,129,0.05)];
+  }
+
+  .status-dot {
+    @apply w-2 h-2 rounded-full bg-emerald shadow-[0_0_10px_#10b981];
+  }
+
+  .nav-floating {
+    @apply fixed bottom-8 left-1/2 -translate-x-1/2 z-50 px-2 py-2 bg-[#1a1a1a]/80 border border-white/10 backdrop-blur-xl rounded-2xl flex items-center gap-1;
+  }
+
+  .nav-item {
+    @apply p-3 rounded-xl transition-all duration-300 text-silver-dark hover:text-white hover:bg-white/5;
+  }
+
+  .nav-item-active {
+    @apply bg-emerald text-white hover:bg-emerald/90;
+  }
+
+  .btn-primary {
+    @apply px-8 py-3 bg-emerald text-white font-bold rounded-lg hover:bg-emerald/90 transition-all flex items-center gap-2 shadow-[0_0_20px_rgba(16,185,129,0.3)];
+  }
+
+  .btn-secondary {
+    @apply px-8 py-3 border border-white/10 text-white font-bold rounded-lg hover:border-emerald/50 hover:bg-emerald/5 transition-all;
+  }
 }
 
-.glass-card:hover {
-  @apply border-emerald-primary/40 shadow-[0_0_20px_rgba(16,185,129,0.1)];
+.text-condensed {
+  letter-spacing: -0.05em;
+  line-height: 0.85;
 }
 
 .grid-bg {
-  background-image: linear-gradient(to right, rgba(16, 185, 129, 0.05) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(16, 185, 129, 0.05) 1px, transparent 1px);
+  background-image: radial-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 0);
   background-size: 40px 40px;
-}
-
-.emerald-gradient-text {
-  @apply bg-gradient-to-r from-emerald-primary via-emerald-400 to-emerald-600 bg-clip-text text-transparent;
-}
-
-.emerald-glow {
-  box-shadow: 0 0 15px rgba(16, 185, 129, 0.3);
 }
