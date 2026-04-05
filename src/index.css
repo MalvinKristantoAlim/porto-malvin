@@ -87,18 +87,23 @@
     background: linear-gradient(
       45deg,
       transparent 45%,
-      rgba(255, 255, 255, 0.05) 50%,
+      rgba(255, 255, 255, 0.03) 50%,
       transparent 55%
     );
     transform: rotate(45deg);
-    animation: shine 8s infinite linear;
+    transition: opacity 0.5s ease;
+    opacity: 0;
     pointer-events: none;
+  }
+
+  .metallic-shine:hover::after {
+    animation: shine 1.5s ease-out forwards;
+    opacity: 1;
   }
 }
 
 @keyframes shine {
   0% { transform: translateX(-100%) rotate(45deg); }
-  20% { transform: translateX(100%) rotate(45deg); }
   100% { transform: translateX(100%) rotate(45deg); }
 }
 
@@ -110,5 +115,13 @@
 .grid-bg {
   background-image: radial-gradient(var(--color-grid) 1px, transparent 0);
   background-size: 40px 40px;
-  mask-image: radial-gradient(circle at 50% 50%, black 30%, transparent 90%);
+  position: relative;
+}
+
+.grid-bg::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 50%, transparent 30%, var(--color-obsidian) 90%);
+  pointer-events: none;
 }
